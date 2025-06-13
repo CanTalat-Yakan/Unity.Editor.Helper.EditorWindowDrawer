@@ -7,8 +7,6 @@ namespace UnityEssentials
 {
     public class EditorWindowDrawer : EditorWindow
     {
-        public EditorWindowDrawer EditorWindow;
-
         public enum GUISkin { None, Box, Window }
 
         private static Vector2 s_minSize = new(300, 400);
