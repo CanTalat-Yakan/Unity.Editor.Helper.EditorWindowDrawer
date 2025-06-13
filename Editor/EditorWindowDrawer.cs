@@ -7,86 +7,54 @@ namespace UnityEssentials
 {
     public class EditorWindowDrawer : EditorWindow
     {
+        public EditorWindowDrawer EditorWindow;
+
         public enum GUISkin { None, Box, Window }
 
         private static Vector2 s_minSize = new(300, 400);
         private static Vector2 s_fallbackPosition = new(Screen.width / 2f, Screen.height / 2f);
 
-        public EditorWindowDrawer ShowWindow(string title, Vector2? minSize = null, Vector2? position = null)
+        public EditorWindowDrawer(string title, Vector2? minSize = null, Vector2? position = null)
         {
             minSize ??= s_minSize;
             position ??= GetPosition(minSize);
             position ??= s_fallbackPosition;
 
-            var window = GetWindow<EditorWindowDrawer>();
-            window.titleContent = new GUIContent(title);
-            window.minSize = minSize.Value;
-            window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
-            window.Show();
-
-            return window;
+            base.titleContent = new GUIContent(title);
+            base.minSize = minSize.Value;
+            base.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
         }
 
-        public EditorWindowDrawer ShowUtility(string title, Vector2? minSize = null, Vector2? position = null)
+        public EditorWindowDrawer ShowWindow()
         {
-            minSize ??= s_minSize;
-            position ??= GetPosition(minSize);
-            position ??= s_fallbackPosition;
-
-            var window = CreateInstance<EditorWindowDrawer>();
-            window.titleContent = new GUIContent(title);
-            window.minSize = minSize.Value;
-            window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
-            window.ShowUtility();
-
-            return window;
+            base.Show();
+            return this;
         }
 
-        public EditorWindowDrawer ShowPopup(string title, Vector2? minSize = null, Vector2? position = null)
+        public EditorWindowDrawer ShowUtility()
         {
-            minSize ??= s_minSize;
-            position ??= GetPosition(minSize);
-            position ??= s_fallbackPosition;
-
-            var window = CreateInstance<EditorWindowDrawer>();
-            window.titleContent = new GUIContent(title);
-            window.minSize = minSize.Value;
-            window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
-            window.ShowPopup();
-
-            return window;
+            base.ShowUtility();
+            return this;
         }
 
-        public EditorWindowDrawer ShowAsDropDown(string title, Rect guiRect, Vector2? windowSize, Vector2? minSize = null, Vector2? position = null)
+        public EditorWindowDrawer ShowPopup()
         {
-            minSize ??= s_minSize;
+            base.ShowPopup();
+            return this;
+        }
+
+        public EditorWindowDrawer ShowAsDropDown(Rect guiRect, Vector2? windowSize)
+        {
             windowSize ??= minSize;
-            position ??= GetPosition(minSize);
-            position ??= s_fallbackPosition;
-
-            var window = CreateInstance<EditorWindowDrawer>();
-            window.titleContent = new GUIContent(title);
-            window.minSize = minSize.Value;
-            window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
-            window.ShowAsDropDown(GUIUtility.GUIToScreenRect(guiRect), windowSize.Value);
-            window.Focus();
-
-            return window;
+            base.ShowAsDropDown(GUIUtility.GUIToScreenRect(guiRect), windowSize.Value);
+            base.Focus();
+            return this;
         }
 
-        public EditorWindowDrawer ShowModalUtility(string title, Vector2? minSize = null, Vector2? position = null)
+        public EditorWindowDrawer ShowModalUtility()
         {
-            minSize ??= s_minSize;
-            position ??= GetPosition(minSize);
-            position ??= s_fallbackPosition;
-
-            var window = CreateInstance<EditorWindowDrawer>();
-            window.titleContent = new GUIContent(title);
-            window.minSize = minSize.Value;
-            window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
-            window.ShowModalUtility();
-
-            return window;
+            base.ShowModalUtility();
+            return this;
         }
 
         private Vector2 GetPosition(Vector2? positionOffset = null)
@@ -136,6 +104,12 @@ namespace UnityEssentials
         public EditorWindowDrawer GetCloseEvent(out Action closeEvent)
         {
             closeEvent = Close;
+            return this;
+        }
+
+        public EditorWindowDrawer GetRepaintEvent(out Action repaintEvent)
+        {
+            repaintEvent = Repaint;
             return this;
         }
 
