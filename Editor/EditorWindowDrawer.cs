@@ -9,161 +9,155 @@ namespace UnityEssentials
     {
         public enum GUISkin { None, Box, Window }
 
+        public Rect Position => base.position;
+        public Vector2 ScrollPosition;
+
+        private Rect desiredPosition;
         private static Vector2 s_minSize = new(300, 400);
-        private static Vector2 s_fallbackPosition = new(Screen.width / 2f, Screen.height / 2f);
 
-        private static bool DrawBorder;
+        public EditorWindowDrawer()
+        {
+            var minSize = s_minSize;
+            var position = GetMousePosition(true, minSize);
+            desiredPosition = new Rect(position.x, position.y, minSize.x, minSize.y);
+        }
 
-        public EditorWindowDrawer(string title = null, Vector2? minSize = null, Vector2? position = null, bool centerPosition = true, bool drawBorder = false)
+        public EditorWindowDrawer(string title = null, Vector2? minSize = null, Vector2? position = null, bool centerPosition = true)
         {
             minSize ??= s_minSize;
             position ??= GetMousePosition(centerPosition, minSize);
-            position ??= s_fallbackPosition;
-
-            DrawBorder = drawBorder;
 
             if (string.IsNullOrEmpty(title))
                 base.titleContent = new GUIContent(title);
             base.minSize = minSize.Value;
-            base.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
+            desiredPosition = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
         }
 
         public EditorWindowDrawer ShowWindow()
         {
             base.Show();
+            base.position = desiredPosition;
             return this;
         }
 
         public EditorWindowDrawer ShowUtility()
         {
             base.ShowUtility();
+            base.position = desiredPosition;
             return this;
         }
 
+        private bool _isUnfocusable = false;
         public EditorWindowDrawer ShowPopup()
         {
             base.ShowPopup();
+            _isUnfocusable = true;
             return this;
         }
 
         public EditorWindowDrawer ShowAsDropDown(Rect rect, Vector2? size)
         {
-            size ??= minSize;
+            size ??= s_minSize;
             base.ShowAsDropDown(GUIUtility.GUIToScreenRect(rect), size.Value);
             base.Focus();
+            _isUnfocusable = true;
             return this;
         }
 
-        public EditorWindowDrawer ShowModalUtility()
+
+        public bool s_drawBorder;
+        public EditorWindowDrawer SetDrawBorder()
         {
-            base.ShowModalUtility();
+            s_drawBorder = true;
             return this;
         }
 
-        private Vector2 GetMousePosition(bool centerPosition = true, Vector2? positionOffset = null)
-        {
-            var offset = Vector2.zero;
-            
-            return MouseInputFetcher.CurrentMousePosition - offset;
-        }
-
-        private Action _preProcessAction;
+        public Action s_preProcessAction;
         public EditorWindowDrawer SetPreProcess(Action preProcess)
         {
-            _preProcessAction = preProcess;
+            s_preProcessAction = preProcess;
             return this;
         }
 
-        private Action _postProcessAction;
+        public Action s_postProcessAction;
         public EditorWindowDrawer SetPostProcess(Action postProcess)
         {
-            _postProcessAction = postProcess;
+            s_postProcessAction = postProcess;
             return this;
         }
 
-        private Action _headerAction;
-        private GUISkin _headerSkin;
+        public Action s_headerAction;
+        public GUISkin s_headerSkin;
         public EditorWindowDrawer SetHeader(Action header, GUISkin skin = GUISkin.None)
         {
-            _headerAction = header;
-            _headerSkin = skin;
+            s_headerAction = header;
+            s_headerSkin = skin;
             return this;
         }
 
-        private Action _bodyAction;
-        private GUISkin _bodySkin;
+        public Action s_bodyAction;
+        public GUISkin s_bodySkin;
         public EditorWindowDrawer SetBody(Action body, GUISkin skin = GUISkin.None)
         {
-            _bodyAction = body;
-            _bodySkin = skin;
+            s_bodyAction = body;
+            s_bodySkin = skin;
             return this;
         }
 
-        private Action _footerAction;
-        private GUISkin _footerSkin;
+        public Action s_footerAction;
+        public GUISkin s_footerSkin;
         public EditorWindowDrawer SetFooter(Action footer, GUISkin skin = GUISkin.None)
         {
-            _footerAction = footer;
-            _footerSkin = skin;
-            return this;
-        }
-
-        public EditorWindowDrawer GetWindowPosition(ref Rect windowPosition)
-        {
-            windowPosition = base.position;
-            return this;
-        }
-
-        private Vector2 _bodyScrollPosition;
-        public EditorWindowDrawer GetBodyScrollPosition(ref Vector2 bodyScrollPosition)
-        {
-            bodyScrollPosition = _bodyScrollPosition;
+            s_footerAction = footer;
+            s_footerSkin = skin;
             return this;
         }
 
         public EditorWindowDrawer GetCloseEvent(out Action closeEvent)
         {
-            closeEvent = Close;
+            closeEvent = base.Close;
             return this;
         }
 
         public EditorWindowDrawer GetRepaintEvent(out Action repaintEvent)
         {
-            repaintEvent = Repaint;
+            repaintEvent = base.Repaint;
             return this;
         }
 
-
-        public void OnLostFocus() =>
-            Close();
+        public void OnLostFocus()
+        {
+            if (_isUnfocusable)
+                Close();
+        }
 
         private void OnGUI()
         {
-            _preProcessAction?.Invoke();
+            s_preProcessAction?.Invoke();
 
-            if (DrawBorder)
+            if (s_drawBorder)
                 BeginDrawBorder();
 
             BeginWindow();
 
-            BeginHeader(_headerSkin);
-            _headerAction?.Invoke();
+            BeginHeader(s_headerSkin);
+            s_headerAction?.Invoke();
             EndHeader();
 
-            BeginBody(_bodySkin, ref _bodyScrollPosition);
-            _bodyAction?.Invoke();
+            BeginBody(s_bodySkin, ref ScrollPosition);
+            s_bodyAction?.Invoke();
             EndBody();
 
-            BeginFooter(_footerSkin);
-            _footerAction?.Invoke();
+            BeginFooter(s_footerSkin);
+            s_footerAction?.Invoke();
             EndFooter();
 
             EndWindow();
 
-            if (DrawBorder)
+            if (s_drawBorder)
                 EndDrawBorder();
 
-            _postProcessAction?.Invoke();
+            s_postProcessAction?.Invoke();
         }
 
         private static void BeginWindow() =>
@@ -217,18 +211,30 @@ namespace UnityEssentials
         private static readonly Color s_borderColorLight = new Color(0.51f, 0.51f, 0.51f);
         private static readonly Color s_backgroundColorPro = new Color(0.22f, 0.22f, 0.22f);
         private static readonly Color s_backgroundColorLight = new Color(0.76f, 0.76f, 0.76f);
+        private static readonly Color s_borderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
+        private static readonly Color s_backgroundColor = EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
         private void BeginDrawBorder()
         {
-            var borderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
-            EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), borderColor);
-
-            var backgroundColor = EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
-            EditorGUI.DrawRect(new Rect(1, 1, position.width - 2, position.height - 2), backgroundColor);
-
-            GUILayout.BeginArea(new Rect(1, 1, position.width - 2, position.height - 2));
+            EditorGUI.DrawRect(new Rect(0, 0, Position.width, Position.height), s_borderColor);
+            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), s_backgroundColor);
+            GUILayout.BeginArea(new Rect(1, 1, Position.width - 2, Position.height - 2));
         }
+
         private void EndDrawBorder() =>
             GUILayout.EndArea();
+
+        private Vector2 GetMousePosition(bool centerPosition = true, Vector2? positionOffset = null)
+        {
+            var offset = Vector2.zero;
+            if (positionOffset.HasValue && centerPosition)
+            {
+                offset = positionOffset.Value;
+                offset /= 2;
+                offset.x -= 30;
+                offset.y -= 30;
+            }
+            return MouseInputFetcher.CurrentMousePosition - offset;
+        }
     }
 }
 #endif
