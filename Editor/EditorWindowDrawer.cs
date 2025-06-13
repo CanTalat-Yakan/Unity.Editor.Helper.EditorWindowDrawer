@@ -12,31 +12,37 @@ namespace UnityEssentials
         public Rect Position => base.position;
         public Vector2 ScrollPosition;
 
+        private string desiredTitle;
         private Rect desiredPosition;
+
         private static Vector2 s_minSize = new(300, 400);
 
         public EditorWindowDrawer()
         {
+            var size = s_minSize;
             var minSize = s_minSize;
             var position = GetMousePosition(true, minSize);
             desiredPosition = new Rect(position.x, position.y, minSize.x, minSize.y);
         }
 
-        public EditorWindowDrawer(string title = null, Vector2? minSize = null, Vector2? position = null, bool centerPosition = true)
+        public EditorWindowDrawer(string title = null, Vector2? size = null, Vector2? minSize = null, Vector2? position = null, bool centerPosition = true)
         {
+            size ??= s_minSize;
             minSize ??= s_minSize;
             position ??= GetMousePosition(centerPosition, minSize);
 
-            if (string.IsNullOrEmpty(title))
-                base.titleContent = new GUIContent(title);
+            desiredTitle = string.IsNullOrEmpty(title) ? string.Empty : title;
+            desiredPosition = new Rect(position.Value.x, position.Value.y, size.Value.x, size.Value.y);
+
+            base.titleContent = new GUIContent(desiredTitle);
             base.minSize = minSize.Value;
-            desiredPosition = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
         }
 
         public EditorWindowDrawer ShowWindow()
         {
             base.Show();
             base.position = desiredPosition;
+            _initialization?.Invoke();
             return this;
         }
 
@@ -44,6 +50,8 @@ namespace UnityEssentials
         {
             base.ShowUtility();
             base.position = desiredPosition;
+            base.titleContent = new GUIContent(desiredTitle);
+            _initialization?.Invoke();
             return this;
         }
 
@@ -52,6 +60,7 @@ namespace UnityEssentials
         {
             base.ShowPopup();
             _isUnfocusable = true;
+            _initialization?.Invoke();
             return this;
         }
 
@@ -61,55 +70,63 @@ namespace UnityEssentials
             base.ShowAsDropDown(GUIUtility.GUIToScreenRect(rect), size.Value);
             base.Focus();
             _isUnfocusable = true;
+            _initialization?.Invoke();
             return this;
         }
 
 
-        public bool s_drawBorder;
+        public bool _drawBorder;
         public EditorWindowDrawer SetDrawBorder()
         {
-            s_drawBorder = true;
+            _drawBorder = true;
             return this;
         }
 
-        public Action s_preProcessAction;
+        public Action _initialization;
+        public EditorWindowDrawer SetInitialization(Action initialization)
+        {
+            _initialization = initialization;
+            return this;
+        }
+
+        public Action _preProcessAction;
         public EditorWindowDrawer SetPreProcess(Action preProcess)
         {
-            s_preProcessAction = preProcess;
+            _preProcessAction = preProcess;
             return this;
         }
 
-        public Action s_postProcessAction;
+        public Action _postProcessAction;
         public EditorWindowDrawer SetPostProcess(Action postProcess)
         {
-            s_postProcessAction = postProcess;
+            _postProcessAction = postProcess;
             return this;
         }
 
-        public Action s_headerAction;
-        public GUISkin s_headerSkin;
+        public Action _headerAction;
+        public GUISkin _headerSkin;
         public EditorWindowDrawer SetHeader(Action header, GUISkin skin = GUISkin.None)
         {
-            s_headerAction = header;
-            s_headerSkin = skin;
+            _headerAction = header;
+            _headerSkin = skin;
             return this;
         }
 
-        public Action s_bodyAction;
-        public GUISkin s_bodySkin;
+        public Action _bodyAction;
+        public GUISkin _bodySkin;
         public EditorWindowDrawer SetBody(Action body, GUISkin skin = GUISkin.None)
         {
-            s_bodyAction = body;
-            s_bodySkin = skin;
+            _bodyAction = body;
+            _bodySkin = skin;
             return this;
         }
 
-        public Action s_footerAction;
-        public GUISkin s_footerSkin;
+        public Action _footerAction;
+        public GUISkin _footerSkin;
         public EditorWindowDrawer SetFooter(Action footer, GUISkin skin = GUISkin.None)
         {
-            s_footerAction = footer;
-            s_footerSkin = skin;
+            _footerAction = footer;
+            _footerSkin = skin;
             return this;
         }
 
@@ -133,31 +150,31 @@ namespace UnityEssentials
 
         private void OnGUI()
         {
-            s_preProcessAction?.Invoke();
+            _preProcessAction?.Invoke();
 
-            if (s_drawBorder)
+            if (_drawBorder)
                 BeginDrawBorder();
 
             BeginWindow();
 
-            BeginHeader(s_headerSkin);
-            s_headerAction?.Invoke();
+            BeginHeader(_headerSkin);
+            _headerAction?.Invoke();
             EndHeader();
 
-            BeginBody(s_bodySkin, ref ScrollPosition);
-            s_bodyAction?.Invoke();
+            BeginBody(_bodySkin, ref ScrollPosition);
+            _bodyAction?.Invoke();
             EndBody();
 
-            BeginFooter(s_footerSkin);
-            s_footerAction?.Invoke();
+            BeginFooter(_footerSkin);
+            _footerAction?.Invoke();
             EndFooter();
 
             EndWindow();
 
-            if (s_drawBorder)
+            if (_drawBorder)
                 EndDrawBorder();
 
-            s_postProcessAction?.Invoke();
+            _postProcessAction?.Invoke();
         }
 
         private static void BeginWindow() =>
@@ -211,12 +228,12 @@ namespace UnityEssentials
         private static readonly Color s_borderColorLight = new Color(0.51f, 0.51f, 0.51f);
         private static readonly Color s_backgroundColorPro = new Color(0.22f, 0.22f, 0.22f);
         private static readonly Color s_backgroundColorLight = new Color(0.76f, 0.76f, 0.76f);
-        private static readonly Color s_borderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
-        private static readonly Color s_backgroundColor = EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
         private void BeginDrawBorder()
         {
-            EditorGUI.DrawRect(new Rect(0, 0, Position.width, Position.height), s_borderColor);
-            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), s_backgroundColor);
+            var borderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
+            var backgroundColor = EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
+            EditorGUI.DrawRect(new Rect(0, 0, Position.width, Position.height), borderColor);
+            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), backgroundColor);
             GUILayout.BeginArea(new Rect(1, 1, Position.width - 2, Position.height - 2));
         }
 
