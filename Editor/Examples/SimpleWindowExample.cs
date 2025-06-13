@@ -11,7 +11,7 @@ namespace Examples.EditorWindow
         public static void ShowWindow() =>
             new EditorWindowDrawer("Example")
                 .SetHeader(Header)
-                .SetBody(Body, out _)
+                .SetBody(Body)
                 .SetFooter(Footer)
                 .ShowWindow();
 
