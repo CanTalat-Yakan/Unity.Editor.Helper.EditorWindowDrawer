@@ -9,8 +9,7 @@ namespace Examples.EditorWindow
     {
         [MenuItem("Tools/Examples/Simple Example Window", priority = 10000)]
         public static void ShowWindow() =>
-            new EditorWindowDrawer()
-                .Window("Example")
+            new EditorWindowDrawer().ShowWindow("Example")
                 .SetHeader(Header)
                 .SetBody(Body, out _)
                 .SetFooter(Footer);

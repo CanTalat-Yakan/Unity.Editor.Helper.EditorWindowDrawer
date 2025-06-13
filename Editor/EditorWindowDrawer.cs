@@ -1,72 +1,105 @@
 #if UNITY_EDITOR
-using UnityEngine;
-using UnityEditor;
 using System;
+using UnityEditor;
+using UnityEngine;
 
 namespace UnityEssentials
 {
     public class EditorWindowDrawer : EditorWindow
     {
-        public enum GUISkin
-        {
-            None,
-            Box,
-            Window,
-        }
+        public enum GUISkin { None, Box, Window }
 
         private static Vector2 s_minSize = new(300, 400);
-        private static Vector2 s_position = new(Screen.width / 2f, Screen.height / 2f);
+        private static Vector2 s_fallbackPosition = new(Screen.width / 2f, Screen.height / 2f);
 
-        public EditorWindowDrawer Window(string title, Vector2? minSize = null, Vector2? position = null)
+        public EditorWindowDrawer ShowWindow(string title, Vector2? minSize = null, Vector2? position = null)
         {
             minSize ??= s_minSize;
-            position ??= s_position;
+            position ??= GetPosition(minSize);
+            position ??= s_fallbackPosition;
 
             var window = GetWindow<EditorWindowDrawer>();
             window.titleContent = new GUIContent(title);
             window.minSize = minSize.Value;
             window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
             window.Show();
-            return this;
+
+            return window;
         }
 
-        public EditorWindowDrawer Utility(string title, Vector2? minSize = null, Vector2? position = null)
+        public EditorWindowDrawer ShowUtility(string title, Vector2? minSize = null, Vector2? position = null)
         {
             minSize ??= s_minSize;
-            position ??= s_position;
+            position ??= GetPosition(minSize);
+            position ??= s_fallbackPosition;
 
             var window = CreateInstance<EditorWindowDrawer>();
             window.titleContent = new GUIContent(title);
             window.minSize = minSize.Value;
             window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
             window.ShowUtility();
-            return this;
+
+            return window;
         }
 
-        public EditorWindowDrawer Popup(string title, Vector2? minSize = null, Vector2? position = null)
+        public EditorWindowDrawer ShowPopup(string title, Vector2? minSize = null, Vector2? position = null)
         {
             minSize ??= s_minSize;
-            position ??= s_position;
+            position ??= GetPosition(minSize);
+            position ??= s_fallbackPosition;
 
             var window = CreateInstance<EditorWindowDrawer>();
             window.titleContent = new GUIContent(title);
             window.minSize = minSize.Value;
             window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
             window.ShowPopup();
-            return this;
+
+            return window;
         }
 
-        public EditorWindowDrawer Modal(string title, Vector2? minSize = null, Vector2? position = null)
+        public EditorWindowDrawer ShowAsDropDown(string title, Rect guiRect, Vector2? windowSize, Vector2? minSize = null, Vector2? position = null)
         {
             minSize ??= s_minSize;
-            position ??= s_position;
+            windowSize ??= minSize;
+            position ??= GetPosition(minSize);
+            position ??= s_fallbackPosition;
+
+            var window = CreateInstance<EditorWindowDrawer>();
+            window.titleContent = new GUIContent(title);
+            window.minSize = minSize.Value;
+            window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
+            window.ShowAsDropDown(GUIUtility.GUIToScreenRect(guiRect), windowSize.Value);
+            window.Focus();
+
+            return window;
+        }
+
+        public EditorWindowDrawer ShowModalUtility(string title, Vector2? minSize = null, Vector2? position = null)
+        {
+            minSize ??= s_minSize;
+            position ??= GetPosition(minSize);
+            position ??= s_fallbackPosition;
 
             var window = CreateInstance<EditorWindowDrawer>();
             window.titleContent = new GUIContent(title);
             window.minSize = minSize.Value;
             window.position = new Rect(position.Value.x, position.Value.y, minSize.Value.x, minSize.Value.y);
             window.ShowModalUtility();
-            return this;
+
+            return window;
+        }
+
+        private Vector2 GetPosition(Vector2? positionOffset = null)
+        {
+            var offset = Vector2.zero;
+            if (positionOffset.HasValue)
+            {
+                offset = positionOffset.Value;
+                offset /= 2;
+                offset.x -= 30;
+                offset.y -= 30;
+            }
+            return MouseInputFetcher.CurrentMousePosition - offset;
         }
 
         private Action _headerAction;
@@ -75,6 +108,7 @@ namespace UnityEssentials
         {
             _headerAction = header;
             _headerSkin = skin;
+
             return this;
         }
 
@@ -86,6 +120,7 @@ namespace UnityEssentials
             scrollPosition = _bodyScrollPosition;
             _bodyAction = body;
             _bodySkin = skin;
+
             return this;
         }
 
@@ -97,6 +132,15 @@ namespace UnityEssentials
             _footerSkin = skin;
             return this;
         }
+
+        public EditorWindowDrawer GetCloseEvent(out Action closeEvent)
+        {
+            closeEvent = Close;
+            return this;
+        }
+
+        public void OnLostFocus() =>
+            Close();
 
         private void OnGUI()
         {
@@ -119,7 +163,6 @@ namespace UnityEssentials
 
         private static void BeginWindow() =>
             GUILayout.BeginVertical();
-
 
         private static void EndWindow() =>
             GUILayout.EndVertical();
@@ -144,7 +187,7 @@ namespace UnityEssentials
                 GUISkin.Box => GUI.skin.box,
                 GUISkin.Window => GUI.skin.window,
             });
-            if(skin == GUISkin.Window)
+            if (skin == GUISkin.Window)
                 GUILayout.Space(-18);
         }
 

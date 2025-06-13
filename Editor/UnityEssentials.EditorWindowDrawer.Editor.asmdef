@@ -1,7 +1,9 @@
 {
     "name": "UnityEssentials.EditorWindowDrawer.Editor",
     "rootNamespace": "UnityEssentials",
-    "references": [],
+    "references": [
+        "GUID:5d2504f41c4c6154aa0f1ccca4586ee7"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
