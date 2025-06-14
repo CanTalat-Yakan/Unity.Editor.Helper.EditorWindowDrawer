@@ -7,7 +7,16 @@ namespace UnityEssentials
 {
     public class EditorWindowDrawer : EditorWindow
     {
-        public enum GUISkin { None, Box, Window }
+        public enum GUISkin
+        {
+            None,
+            Margin,
+            BigMargin,
+            Box,
+            Window,
+            HelpBox,
+            Toolbar
+        }
 
         public Rect Position => base.position;
         public Vector2 ScrollPosition;
@@ -25,7 +34,7 @@ namespace UnityEssentials
             _desiredPosition = new Rect(position.x, position.y, minSize.x, minSize.y);
         }
 
-        public EditorWindowDrawer(string title = null, Vector2? size = null, Vector2? minSize = null, Vector2? position = null, bool centerPosition = true)
+        public EditorWindowDrawer(string title = null, Vector2? minSize = null, Vector2? size = null, Vector2? position = null, bool centerPosition = true)
         {
             size ??= s_minSize;
             minSize ??= s_minSize;
@@ -55,7 +64,6 @@ namespace UnityEssentials
             return this;
         }
 
-        private bool _isUnfocusable = false;
         public EditorWindowDrawer ShowPopup()
         {
             base.ShowPopup();
@@ -141,6 +149,7 @@ namespace UnityEssentials
             return this;
         }
 
+        private bool _isUnfocusable = false;
         public void OnLostFocus()
         {
             if (_isUnfocusable)
@@ -158,7 +167,7 @@ namespace UnityEssentials
 
             BeginHeader(_headerSkin);
             _headerAction?.Invoke();
-            EndHeader();
+            EndHeader(_headerSkin);
 
             BeginBody(_bodySkin, ref ScrollPosition);
             _bodyAction?.Invoke();
@@ -182,43 +191,52 @@ namespace UnityEssentials
         private static void EndWindow() =>
             GUILayout.EndVertical();
 
-        private static void BeginHeader(GUISkin skin) =>
-            GUILayout.BeginVertical(skin switch
-            {
-                GUISkin.None => GUIStyle.none,
-                GUISkin.Box => GUI.skin.box,
-                GUISkin.Window => GUI.skin.window,
-            });
+        private static void BeginHeader(GUISkin skin)
+        {
+            if (skin == GUISkin.Toolbar)
+                GUILayout.BeginHorizontal(GetStyle(skin));
+            else GUILayout.BeginVertical(GetStyle(skin));
 
-        private static void EndHeader() =>
-            GUILayout.EndVertical();
+            if (skin == GUISkin.Window)
+                GUILayout.Space(-17);
+        }
+
+        private static void EndHeader(GUISkin skin)
+        {
+            if (skin == GUISkin.Toolbar)
+                GUILayout.EndHorizontal();
+            else GUILayout.EndVertical();
+
+            if (skin == GUISkin.HelpBox)
+                GUILayout.Space(-2);
+        }
 
         private static void BeginBody(GUISkin skin, ref Vector2 scrollPosition)
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            GUILayout.BeginVertical(skin switch
-            {
-                GUISkin.None => GUIStyle.none,
-                GUISkin.Box => GUI.skin.box,
-                GUISkin.Window => GUI.skin.window,
-            });
+            GUILayout.BeginVertical(GetStyle(skin));
+
             if (skin == GUISkin.Window)
-                GUILayout.Space(-18);
+                GUILayout.Space(-17);
         }
 
         private static void EndBody()
         {
+            GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
 
-        private static void BeginFooter(GUISkin skin) =>
-            GUILayout.BeginVertical(skin switch
-            {
-                GUISkin.None => GUIStyle.none,
-                GUISkin.Box => GUI.skin.box,
-                GUISkin.Window => GUI.skin.window,
-            });
+        private static void BeginFooter(GUISkin skin)
+        {
+            if (skin == GUISkin.HelpBox)
+                GUILayout.Space(-2);
+
+            GUILayout.BeginVertical(GetStyle(skin));
+
+            if (skin == GUISkin.Window)
+                GUILayout.Space(-17);
+        }
 
         private static void EndFooter() =>
             GUILayout.EndVertical();
@@ -250,6 +268,20 @@ namespace UnityEssentials
                 offset.y -= 30;
             }
             return MouseInputFetcher.CurrentMousePosition - offset;
+        }
+
+        private static GUIStyle GetStyle(GUISkin skin)
+        {
+            return skin switch
+            {
+                GUISkin.Box => GUI.skin.box,
+                GUISkin.Window => GUI.skin.window,
+                GUISkin.HelpBox => EditorStyles.helpBox,
+                GUISkin.Toolbar => EditorStyles.toolbar,
+                GUISkin.Margin => EditorStyles.inspectorFullWidthMargins,
+                GUISkin.BigMargin => EditorStyles.inspectorDefaultMargins,
+                GUISkin.None or _ => GUIStyle.none,
+            };
         }
     }
 }
