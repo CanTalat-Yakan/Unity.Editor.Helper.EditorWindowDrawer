@@ -12,8 +12,8 @@ namespace UnityEssentials
         public Rect Position => base.position;
         public Vector2 ScrollPosition;
 
-        private string desiredTitle;
-        private Rect desiredPosition;
+        private string _desiredTitle;
+        private Rect _desiredPosition;
 
         private static Vector2 s_minSize = new(300, 400);
 
@@ -22,7 +22,7 @@ namespace UnityEssentials
             var size = s_minSize;
             var minSize = s_minSize;
             var position = GetMousePosition(true, minSize);
-            desiredPosition = new Rect(position.x, position.y, minSize.x, minSize.y);
+            _desiredPosition = new Rect(position.x, position.y, minSize.x, minSize.y);
         }
 
         public EditorWindowDrawer(string title = null, Vector2? size = null, Vector2? minSize = null, Vector2? position = null, bool centerPosition = true)
@@ -31,17 +31,17 @@ namespace UnityEssentials
             minSize ??= s_minSize;
             position ??= GetMousePosition(centerPosition, minSize);
 
-            desiredTitle = string.IsNullOrEmpty(title) ? string.Empty : title;
-            desiredPosition = new Rect(position.Value.x, position.Value.y, size.Value.x, size.Value.y);
+            _desiredTitle = string.IsNullOrEmpty(title) ? string.Empty : title;
+            _desiredPosition = new Rect(position.Value.x, position.Value.y, size.Value.x, size.Value.y);
 
-            base.titleContent = new GUIContent(desiredTitle);
+            base.titleContent = new GUIContent(_desiredTitle);
             base.minSize = minSize.Value;
         }
 
         public EditorWindowDrawer ShowWindow()
         {
             base.Show();
-            base.position = desiredPosition;
+            base.position = _desiredPosition;
             _initialization?.Invoke();
             return this;
         }
@@ -49,8 +49,8 @@ namespace UnityEssentials
         public EditorWindowDrawer ShowUtility()
         {
             base.ShowUtility();
-            base.position = desiredPosition;
-            base.titleContent = new GUIContent(desiredTitle);
+            base.position = _desiredPosition;
+            base.titleContent = new GUIContent(_desiredTitle);
             _initialization?.Invoke();
             return this;
         }
@@ -74,37 +74,36 @@ namespace UnityEssentials
             return this;
         }
 
-
-        public bool _drawBorder;
+        private bool _drawBorder;
         public EditorWindowDrawer SetDrawBorder()
         {
             _drawBorder = true;
             return this;
         }
 
-        public Action _initialization;
+        private Action _initialization;
         public EditorWindowDrawer SetInitialization(Action initialization)
         {
             _initialization = initialization;
             return this;
         }
 
-        public Action _preProcessAction;
+        private Action _preProcessAction;
         public EditorWindowDrawer SetPreProcess(Action preProcess)
         {
             _preProcessAction = preProcess;
             return this;
         }
 
-        public Action _postProcessAction;
+        private Action _postProcessAction;
         public EditorWindowDrawer SetPostProcess(Action postProcess)
         {
             _postProcessAction = postProcess;
             return this;
         }
 
-        public Action _headerAction;
-        public GUISkin _headerSkin;
+        private Action _headerAction;
+        private GUISkin _headerSkin;
         public EditorWindowDrawer SetHeader(Action header, GUISkin skin = GUISkin.None)
         {
             _headerAction = header;
@@ -112,8 +111,8 @@ namespace UnityEssentials
             return this;
         }
 
-        public Action _bodyAction;
-        public GUISkin _bodySkin;
+        private Action _bodyAction;
+        private GUISkin _bodySkin;
         public EditorWindowDrawer SetBody(Action body, GUISkin skin = GUISkin.None)
         {
             _bodyAction = body;
@@ -121,8 +120,8 @@ namespace UnityEssentials
             return this;
         }
 
-        public Action _footerAction;
-        public GUISkin _footerSkin;
+        private Action _footerAction;
+        private GUISkin _footerSkin;
         public EditorWindowDrawer SetFooter(Action footer, GUISkin skin = GUISkin.None)
         {
             _footerAction = footer;
