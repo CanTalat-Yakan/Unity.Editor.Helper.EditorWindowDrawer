@@ -24,21 +24,23 @@ namespace UnityEssentials
         private string _desiredTitle;
         private Rect _desiredPosition;
 
-        private static Vector2 s_minSize = new(300, 400);
+        private static Vector2 s_minSize = new(300, 300);
 
         public EditorWindowDrawer()
         {
             var size = s_minSize;
-            var minSize = s_minSize;
-            var position = GetMousePosition(true, minSize);
-            _desiredPosition = new Rect(position.x, position.y, minSize.x, minSize.y);
+            var position = GetMousePosition(true, size);
+
+            _desiredPosition = new Rect(position.x, position.y, size.x, size.y);
+
+            base.minSize = s_minSize;
         }
 
         public EditorWindowDrawer(string title = null, Vector2? minSize = null, Vector2? size = null, Vector2? position = null, bool centerPosition = true)
         {
             size ??= s_minSize;
             minSize ??= s_minSize;
-            position ??= GetMousePosition(centerPosition, minSize);
+            position ??= GetMousePosition(centerPosition, size);
 
             _desiredTitle = string.IsNullOrEmpty(title) ? string.Empty : title;
             _desiredPosition = new Rect(position.Value.x, position.Value.y, size.Value.x, size.Value.y);
@@ -50,6 +52,7 @@ namespace UnityEssentials
         public EditorWindowDrawer ShowWindow()
         {
             base.Show();
+            base.Focus();
             base.position = _desiredPosition;
             _initialization?.Invoke();
             return this;
@@ -58,6 +61,7 @@ namespace UnityEssentials
         public EditorWindowDrawer ShowUtility()
         {
             base.ShowUtility();
+            base.Focus();
             base.position = _desiredPosition;
             base.titleContent = new GUIContent(_desiredTitle);
             _initialization?.Invoke();
@@ -67,6 +71,7 @@ namespace UnityEssentials
         public EditorWindowDrawer ShowPopup()
         {
             base.ShowPopup();
+            base.Focus();
             _isUnfocusable = true;
             _initialization?.Invoke();
             return this;
@@ -262,8 +267,7 @@ namespace UnityEssentials
             if (positionOffset.HasValue && centerPosition)
             {
                 offset = positionOffset.Value;
-                offset.x /= 1.5f;
-                offset.y /= 2;
+                offset /= 2;
             }
             return MouseInputFetcher.CurrentMousePosition - offset;
         }
