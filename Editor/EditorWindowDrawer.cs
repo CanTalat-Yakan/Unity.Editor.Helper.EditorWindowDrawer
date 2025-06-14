@@ -222,7 +222,6 @@ namespace UnityEssentials
 
         private static void EndBody()
         {
-            GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
@@ -263,9 +262,8 @@ namespace UnityEssentials
             if (positionOffset.HasValue && centerPosition)
             {
                 offset = positionOffset.Value;
-                offset /= 2;
-                offset.x -= 30;
-                offset.y -= 30;
+                offset.x /= 1.5f;
+                offset.y /= 2;
             }
             return MouseInputFetcher.CurrentMousePosition - offset;
         }
