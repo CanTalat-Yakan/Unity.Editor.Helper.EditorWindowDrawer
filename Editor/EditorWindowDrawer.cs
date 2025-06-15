@@ -5,19 +5,19 @@ using UnityEngine;
 
 namespace UnityEssentials
 {
+    public enum EditorWindowStyle
+    {
+        None,
+        Margin,
+        BigMargin,
+        Box,
+        Window,
+        HelpBox,
+        Toolbar
+    }
+
     public class EditorWindowDrawer : EditorWindow
     {
-        public enum GUISkin
-        {
-            None,
-            Margin,
-            BigMargin,
-            Box,
-            Window,
-            HelpBox,
-            Toolbar
-        }
-
         public Rect Position => base.position;
         public Vector2 ScrollPosition;
 
@@ -116,8 +116,8 @@ namespace UnityEssentials
         }
 
         private Action _headerAction;
-        private GUISkin _headerSkin;
-        public EditorWindowDrawer SetHeader(Action header, GUISkin skin = GUISkin.None)
+        private EditorWindowStyle _headerSkin;
+        public EditorWindowDrawer SetHeader(Action header, EditorWindowStyle skin = EditorWindowStyle.None)
         {
             _headerAction = header;
             _headerSkin = skin;
@@ -125,8 +125,8 @@ namespace UnityEssentials
         }
 
         private Action _bodyAction;
-        private GUISkin _bodySkin;
-        public EditorWindowDrawer SetBody(Action body, GUISkin skin = GUISkin.None)
+        private EditorWindowStyle _bodySkin;
+        public EditorWindowDrawer SetBody(Action body, EditorWindowStyle skin = EditorWindowStyle.None)
         {
             _bodyAction = body;
             _bodySkin = skin;
@@ -134,8 +134,8 @@ namespace UnityEssentials
         }
 
         private Action _footerAction;
-        private GUISkin _footerSkin;
-        public EditorWindowDrawer SetFooter(Action footer, GUISkin skin = GUISkin.None)
+        private EditorWindowStyle _footerSkin;
+        public EditorWindowDrawer SetFooter(Action footer, EditorWindowStyle skin = EditorWindowStyle.None)
         {
             _footerAction = footer;
             _footerSkin = skin;
@@ -196,32 +196,32 @@ namespace UnityEssentials
         private static void EndWindow() =>
             GUILayout.EndVertical();
 
-        private static void BeginHeader(GUISkin skin)
+        private static void BeginHeader(EditorWindowStyle skin)
         {
-            if (skin == GUISkin.Toolbar)
+            if (skin == EditorWindowStyle.Toolbar)
                 GUILayout.BeginHorizontal(GetStyle(skin));
             else GUILayout.BeginVertical(GetStyle(skin));
 
-            if (skin == GUISkin.Window)
+            if (skin == EditorWindowStyle.Window)
                 GUILayout.Space(-17);
         }
 
-        private static void EndHeader(GUISkin skin)
+        private static void EndHeader(EditorWindowStyle skin)
         {
-            if (skin == GUISkin.Toolbar)
+            if (skin == EditorWindowStyle.Toolbar)
                 GUILayout.EndHorizontal();
             else GUILayout.EndVertical();
 
-            if (skin == GUISkin.HelpBox)
+            if (skin == EditorWindowStyle.HelpBox)
                 GUILayout.Space(-2);
         }
 
-        private static void BeginBody(GUISkin skin, ref Vector2 scrollPosition)
+        private static void BeginBody(EditorWindowStyle skin, ref Vector2 scrollPosition)
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
             GUILayout.BeginVertical(GetStyle(skin));
 
-            if (skin == GUISkin.Window)
+            if (skin == EditorWindowStyle.Window)
                 GUILayout.Space(-17);
         }
 
@@ -231,14 +231,14 @@ namespace UnityEssentials
             EditorGUILayout.EndScrollView();
         }
 
-        private static void BeginFooter(GUISkin skin)
+        private static void BeginFooter(EditorWindowStyle skin)
         {
-            if (skin == GUISkin.HelpBox)
+            if (skin == EditorWindowStyle.HelpBox)
                 GUILayout.Space(-2);
 
             GUILayout.BeginVertical(GetStyle(skin));
 
-            if (skin == GUISkin.Window)
+            if (skin == EditorWindowStyle.Window)
                 GUILayout.Space(-17);
         }
 
@@ -272,17 +272,17 @@ namespace UnityEssentials
             return MouseInputFetcher.CurrentMousePosition - offset;
         }
 
-        private static GUIStyle GetStyle(GUISkin skin)
+        private static GUIStyle GetStyle(EditorWindowStyle skin)
         {
             return skin switch
             {
-                GUISkin.Box => GUI.skin.box,
-                GUISkin.Window => GUI.skin.window,
-                GUISkin.HelpBox => EditorStyles.helpBox,
-                GUISkin.Toolbar => EditorStyles.toolbar,
-                GUISkin.Margin => EditorStyles.inspectorFullWidthMargins,
-                GUISkin.BigMargin => EditorStyles.inspectorDefaultMargins,
-                GUISkin.None or _ => GUIStyle.none,
+                EditorWindowStyle.Box => GUI.skin.box,
+                EditorWindowStyle.Window => GUI.skin.window,
+                EditorWindowStyle.HelpBox => EditorStyles.helpBox,
+                EditorWindowStyle.Toolbar => EditorStyles.toolbar,
+                EditorWindowStyle.Margin => EditorStyles.inspectorFullWidthMargins,
+                EditorWindowStyle.BigMargin => EditorStyles.inspectorDefaultMargins,
+                EditorWindowStyle.None or _ => GUIStyle.none,
             };
         }
     }
