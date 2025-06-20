@@ -94,6 +94,25 @@ namespace UnityEssentials
             return this;
         }
 
+
+        private EditorApplication.CallbackFunction _editorApplicationCallback;
+        public EditorWindowDrawer AddUpdate(Action updateAction)
+        {
+            RemoveUpdate(); // Ensure no duplicate
+            _editorApplicationCallback = new(updateAction);
+            EditorApplication.update += _editorApplicationCallback;
+            return this;
+        }
+
+        public void RemoveUpdate()
+        {
+            if (_editorApplicationCallback != null)
+            {
+                EditorApplication.update -= _editorApplicationCallback;
+                _editorApplicationCallback = null;
+            }
+        }
+
         private Action _initialization;
         public EditorWindowDrawer SetInitialization(Action initialization)
         {
@@ -159,11 +178,26 @@ namespace UnityEssentials
         {
             if (_isUnfocusable)
                 Close();
+
+            RemoveUpdate();
+        }
+
+        public void OnDestroy()
+        {
+            RemoveUpdate();
+            _preProcessAction = null;
+            _postProcessAction = null;
+            _headerAction = null;
+            _bodyAction = null;
+            _footerAction = null;
+            _initialization = null;
         }
 
         private void OnGUI()
         {
+            EditorGUI.BeginChangeCheck();
             _preProcessAction?.Invoke();
+            EditorGUI.EndChangeCheck();
 
             if (_drawBorder)
                 BeginDrawBorder();
@@ -270,6 +304,13 @@ namespace UnityEssentials
                 offset /= 2;
             }
             return MouseInputFetcher.CurrentMousePosition - offset;
+        }
+
+        public Vector2 GetLocalMousePosition()
+        {
+            // MouseInputFetcher.CurrentMousePosition is in screen coordinates.
+            // base.position.position is the window's top-left in screen coordinates.
+            return MouseInputFetcher.CurrentMousePosition - base.position.position;
         }
 
         private static GUIStyle GetStyle(EditorWindowStyle skin)
