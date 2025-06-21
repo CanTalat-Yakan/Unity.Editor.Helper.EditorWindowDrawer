@@ -249,15 +249,18 @@ namespace UnityEssentials
 
         private void DrawHeader()
         {
-            BeginHeader(_headerSkin);
+            if (_paneAction != null && _headerSkin != EditorWindowStyle.Toolbar)
+                return;
+
+            BeginHeader(_headerSkin, Position.width + 2);
             _headerAction?.Invoke();
             EndHeader(_headerSkin);
         }
 
-        private static void BeginHeader(EditorWindowStyle skin)
+        private static void BeginHeader(EditorWindowStyle skin, float width)
         {
             if (skin == EditorWindowStyle.Toolbar)
-                GUILayout.BeginHorizontal(GetStyle(skin));
+                GUILayout.BeginHorizontal(GetStyle(skin), GUILayout.Width(width));
             else GUILayout.BeginVertical(GetStyle(skin));
 
             if (skin == EditorWindowStyle.Window)
@@ -357,10 +360,10 @@ namespace UnityEssentials
             Rect hitboxSplitter;
             if (isVerticalOrientation)
                 hitboxSplitter = GUILayoutUtility.GetRect(float.MaxValue, SplitterSize,
-                    GUILayout.ExpandWidth(true),
+                    GUILayout.ExpandWidth(false),
                     GUILayout.Height(SplitterSize));
             else hitboxSplitter = GUILayoutUtility.GetRect(SplitterSize, float.MaxValue,
-                    GUILayout.ExpandHeight(true),
+                    GUILayout.ExpandHeight(false),
                     GUILayout.Width(SplitterSize));
 
             var visibleSplitter = isVerticalOrientation
@@ -385,7 +388,8 @@ namespace UnityEssentials
             {
                 if (isVerticalOrientation)
                 {
-                    float mouseY = GetLocalMousePosition().y - 21;
+                    float headerOffset = _headerAction != null ? 21 : 0;
+                    float mouseY = GetLocalMousePosition().y - headerOffset;
                     float minPaneHeight = MinSplitterSize;
                     float maxPaneHeight = Position.height - MinSplitterSize - SplitterSize;
                     SplitterPosition = Mathf.Clamp(mouseY, minPaneHeight, maxPaneHeight);
@@ -407,6 +411,7 @@ namespace UnityEssentials
         {
             GUILayout.BeginVertical(GetStyle(skin),
                 GUILayout.Width(splitterPosition));
+
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
@@ -420,6 +425,7 @@ namespace UnityEssentials
             guiLayoutOptions.Add(GUILayout.Width(width));
 
             GUILayout.BeginVertical(GetStyle(skin), guiLayoutOptions.ToArray());
+
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
@@ -439,6 +445,7 @@ namespace UnityEssentials
             if (width.HasValue) guiLayoutOptions.Add(GUILayout.Width(width.Value));
 
             GUILayout.BeginVertical(GetStyle(skin), guiLayoutOptions.ToArray());
+
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
@@ -451,6 +458,7 @@ namespace UnityEssentials
         {
             GUILayout.BeginVertical(GetStyle(skin),
                 GUILayout.ExpandWidth(true));
+
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
@@ -467,6 +475,9 @@ namespace UnityEssentials
 
         private void DrawFooter()
         {
+            if(_paneAction != null)
+                return;
+
             BeginFooter(_footerSkin);
             _footerAction?.Invoke();
             EndFooter();
