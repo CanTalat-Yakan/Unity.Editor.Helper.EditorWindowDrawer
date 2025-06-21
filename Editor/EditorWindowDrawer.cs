@@ -315,19 +315,18 @@ namespace UnityEssentials
 
         private void DrawBody(EditorPaneStyle? style = null)
         {
-            var width = style == EditorPaneStyle.Right || style == EditorPaneStyle.Top ? Position.width : (float?)null;
             switch (style)
             {
                 case EditorPaneStyle.Left:
                 case EditorPaneStyle.Right:
                 case null:
-                    BeginBody(_bodySkin, width, ref BodyScrollPosition);
+                    BeginBody(_bodySkin, ref BodyScrollPosition);
                     _bodyAction?.Invoke();
                     EndBody();
                     break;
                 case EditorPaneStyle.Top:
                 case EditorPaneStyle.Bottom:
-                    BeginBodyVertical(_bodySkin, width, ref SlitterPosition, ref BodyScrollPosition);
+                    BeginBodyVertical(_bodySkin, Position.width, ref SlitterPosition, ref BodyScrollPosition);
                     _bodyAction?.Invoke();
                     EndBody();
                     break;
@@ -396,8 +395,7 @@ namespace UnityEssentials
                     float mouseY = GetLocalMousePosition().y - 21;
                     float minPaneHeight = MinSplitterSize;
                     float maxPaneHeight = Position.height - MinSplitterSize - SplitterSize;
-                    float splitterPosition = Mathf.Clamp(mouseY, minPaneHeight, maxPaneHeight);
-                    SlitterPosition = splitterPosition;
+                    SlitterPosition = Mathf.Clamp(mouseY, minPaneHeight, maxPaneHeight);
                 }
                 else
                 {
@@ -451,12 +449,10 @@ namespace UnityEssentials
                 GUILayout.Space(-17);
         }
 
-        private static void BeginBody(EditorWindowStyle skin, float? width, ref Vector2 scrollPosition)
+        private static void BeginBody(EditorWindowStyle skin, ref Vector2 scrollPosition)
         {
-            var guiLayoutOptions = width.HasValue
-                ? new[] { GUILayout.ExpandWidth(true), GUILayout.Width(width.Value) }
-                : new[] { GUILayout.ExpandWidth(true) };
-            GUILayout.BeginVertical(GetStyle(skin), guiLayoutOptions);
+            GUILayout.BeginVertical(GetStyle(skin), 
+                GUILayout.ExpandWidth(true));
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
