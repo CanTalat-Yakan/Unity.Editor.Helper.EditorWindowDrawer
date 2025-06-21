@@ -315,7 +315,7 @@ namespace UnityEssentials
 
         private void DrawBody()
         {
-            BeginBody(_bodySkin, ref BodyScrollPosition);
+            BeginBody(_bodySkin, Position.width, ref BodyScrollPosition);
             _bodyAction?.Invoke();
             EndBody();
         }
@@ -333,7 +333,7 @@ namespace UnityEssentials
                     break;
                 case EditorPaneStyle.Top:
                 case EditorPaneStyle.Bottom:
-                    BeginPaneVertical(_paneSkin, ref _splitterPosition, ref PaneScrollPosition);
+                    BeginPaneVertical(_paneSkin, Position.width, ref _splitterPosition, ref PaneScrollPosition);
                     _paneAction?.Invoke(); 
                     EndPaneVertical();
                     break;
@@ -398,9 +398,9 @@ namespace UnityEssentials
             }
         }
 
-        private static void BeginPaneVertical(EditorWindowStyle skin, ref float splitterPosition, ref Vector2 scrollPosition)
+        private static void BeginPaneVertical(EditorWindowStyle skin, float width, ref float splitterPosition, ref Vector2 scrollPosition)
         {
-            GUILayout.BeginVertical(GetStyle(skin), GUILayout.Height(splitterPosition));
+            GUILayout.BeginVertical(GetStyle(skin), GUILayout.Height(splitterPosition), GUILayout.Width(width));
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
@@ -426,9 +426,9 @@ namespace UnityEssentials
             GUILayout.EndVertical();
         }
 
-        private static void BeginBody(EditorWindowStyle skin, ref Vector2 scrollPosition)
+        private static void BeginBody(EditorWindowStyle skin, float width, ref Vector2 scrollPosition)
         {
-            GUILayout.BeginVertical(GetStyle(skin), GUILayout.ExpandWidth(true));
+            GUILayout.BeginVertical(GetStyle(skin), GUILayout.ExpandWidth(true), GUILayout.Width(width));
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
