@@ -393,12 +393,11 @@ namespace UnityEssentials
             {
                 if (isVerticalOrientation)
                 {
-                    float mouseY = GetLocalMousePosition().y;
+                    float mouseY = GetLocalMousePosition().y - 21;
                     float minPaneHeight = MinSplitterSize;
-                    float maxBodyHeight = Position.height - MinSplitterSize - SplitterSize;
                     float maxPaneHeight = Position.height - MinSplitterSize - SplitterSize;
                     float splitterPosition = Mathf.Clamp(mouseY, minPaneHeight, maxPaneHeight);
-                    SlitterPosition = paneFirst ? splitterPosition : Position.height - splitterPosition;
+                    SlitterPosition = splitterPosition;
                 }
                 else
                 {
