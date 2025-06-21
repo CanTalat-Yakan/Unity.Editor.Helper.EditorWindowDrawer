@@ -24,7 +24,7 @@ namespace UnityEssentials
         private string _desiredTitle;
         private Rect _desiredPosition;
 
-        private static Vector2 s_minSize = new(300, 300);
+        private static Vector2 s_minSize = new(256, 256);
 
         public EditorWindowDrawer()
         {
