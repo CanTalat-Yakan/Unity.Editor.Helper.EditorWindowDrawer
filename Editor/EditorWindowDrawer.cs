@@ -16,6 +16,14 @@ namespace UnityEssentials
         Toolbar
     }
 
+    public enum EditorPaneStyle
+    {
+        Left,
+        Top,
+        Right,
+        Bottom,
+    }
+
     public class EditorWindowDrawer : EditorWindow
     {
         public Rect Position => base.position;
@@ -147,10 +155,12 @@ namespace UnityEssentials
         }
 
         private Action _paneAction;
+        private EditorPaneStyle _paneStyle;
         private EditorWindowStyle _paneSkin;
-        public EditorWindowDrawer SetBodyPane(Action pane, EditorWindowStyle skin = EditorWindowStyle.None)
+        public EditorWindowDrawer SetPane(Action pane, EditorPaneStyle style = EditorPaneStyle.Left, EditorWindowStyle skin = EditorWindowStyle.None)
         {
             _paneAction = pane;
+            _paneStyle = style;
             _paneSkin = skin;
             return this;
         }
@@ -213,7 +223,7 @@ namespace UnityEssentials
             BeginDrawBorder(_drawBorder);
             BeginWindow();
             DrawHeader();
-            DrawBody();
+            DrawBodySplitView();
             DrawFooter();
             EndWindow();
             EndDrawBorder(_drawBorder);
@@ -262,52 +272,102 @@ namespace UnityEssentials
                 GUILayout.Space(-2);
         }
 
-        private float _splitterPosition = 300f; // Initialize with a reasonable default width
+        private void DrawBodySplitView()
+        {
+            if (_paneAction == null)
+            {
+                DrawBody();
+                return;
+            }
+
+            switch (_paneStyle)
+            {
+                case EditorPaneStyle.Left:
+                    GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+                    DrawPane(_paneStyle);
+                    DrawSplitter(_paneStyle);
+                    DrawBody();
+                    GUILayout.EndHorizontal();
+                    break;
+                case EditorPaneStyle.Right:
+                    GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+                    DrawBody();
+                    DrawSplitter(_paneStyle);
+                    DrawPane(_paneStyle);
+                    GUILayout.EndHorizontal();
+                    break;
+                case EditorPaneStyle.Top:
+                    GUILayout.BeginVertical(GUILayout.ExpandHeight(true));
+                    DrawPane(_paneStyle);
+                    DrawSplitter(_paneStyle);
+                    DrawBody();
+                    GUILayout.EndVertical();
+                    break;
+                case EditorPaneStyle.Bottom:
+                    GUILayout.BeginVertical(GUILayout.ExpandHeight(true));
+                    DrawBody();
+                    DrawSplitter(_paneStyle);
+                    DrawPane(_paneStyle);
+                    GUILayout.EndVertical();
+                    break;
+            }
+        }
+
         private void DrawBody()
         {
-            if (_paneAction != null)
+            BeginBody(_bodySkin, ref BodyScrollPosition);
+            _bodyAction?.Invoke();
+            EndBody();
+        }
+
+        private float _splitterPosition = 300f;
+        private void DrawPane(EditorPaneStyle style)
+        {
+            switch (style)
             {
-                GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
-
-                // Left Pane
-                BeginPane(_paneSkin, ref _splitterPosition, ref PaneScrollPosition);
-                _paneAction?.Invoke();
-                EndPane();
-
-                // Splitter
-                DrawSplitView();
-
-                // Main Body (right pane)
-                BeginBody(_bodySkin, ref BodyScrollPosition);
-                _bodyAction?.Invoke();
-                EndBody();
-
-                GUILayout.EndHorizontal();
-            }
-            else
-            {
-                // Handle case without pane
-                BeginBody(_bodySkin, ref BodyScrollPosition);
-                _bodyAction?.Invoke();
-                EndBody();
+                case EditorPaneStyle.Left:
+                case EditorPaneStyle.Right:
+                    BeginPane(_paneSkin, ref _splitterPosition, ref PaneScrollPosition);
+                    _paneAction?.Invoke();
+                    EndPane();
+                    break;
+                case EditorPaneStyle.Top:
+                case EditorPaneStyle.Bottom:
+                    BeginPaneVertical(_paneSkin, ref _splitterPosition, ref PaneScrollPosition);
+                    _paneAction?.Invoke(); 
+                    EndPaneVertical();
+                    break;
             }
         }
 
         private bool _isDraggingSplitter;
-        private const float MinSplitterWidth = 100f;
-        private const float SplitterWidth = 5f;
-        private void DrawSplitView()
+        private const float MinSplitterSize = 100f;
+        private const float SplitterSize = 5f;
+        private void DrawSplitter(EditorPaneStyle style)
         {
-            var hitboxSplitter = GUILayoutUtility.GetRect(SplitterWidth, float.MaxValue,
-                GUILayout.ExpandHeight(true),
-                GUILayout.Width(SplitterWidth));
+            bool isVertical = style == EditorPaneStyle.Top || style == EditorPaneStyle.Bottom;
+            bool bodyFirst = style == EditorPaneStyle.Right || style == EditorPaneStyle.Bottom;
 
-            var visibleSplitter = new Rect(hitboxSplitter.x, hitboxSplitter.y, 1, hitboxSplitter.height);
+            Rect hitboxSplitter;
+            if (isVertical)
+                hitboxSplitter = GUILayoutUtility.GetRect(float.MaxValue, SplitterSize,
+                    GUILayout.ExpandWidth(true),
+                    GUILayout.Height(SplitterSize));
+            else hitboxSplitter = GUILayoutUtility.GetRect(SplitterSize, float.MaxValue,
+                    GUILayout.ExpandHeight(true),
+                    GUILayout.Width(SplitterSize));
+
+            var visibleSplitter = isVertical
+                ? new Rect(hitboxSplitter.x, hitboxSplitter.y, hitboxSplitter.width, 1)
+                : new Rect(hitboxSplitter.x, hitboxSplitter.y, 1, hitboxSplitter.height);
+
             var borderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
             EditorGUI.DrawRect(visibleSplitter, borderColor);
 
-            // Handle splitter dragging
-            EditorGUIUtility.AddCursorRect(hitboxSplitter, MouseCursor.ResizeHorizontal);
+            EditorGUIUtility.AddCursorRect(hitboxSplitter, isVertical
+                ? MouseCursor.ResizeVertical
+                : MouseCursor.ResizeHorizontal);
+
             if (Event.current.type == EventType.MouseDown && hitboxSplitter.Contains(GetLocalMousePosition()))
                 _isDraggingSplitter = true;
 
@@ -316,40 +376,62 @@ namespace UnityEssentials
 
             if (_isDraggingSplitter)
             {
-                float mouseX = GetLocalMousePosition().x;
-                float minPaneWidth = MinSplitterWidth;
-                float maxPaneWidth = Position.width - MinSplitterWidth - SplitterWidth;
-                _splitterPosition = Mathf.Clamp(mouseX, minPaneWidth, maxPaneWidth);
+                if (isVertical)
+                {
+                    float mouseY = GetLocalMousePosition().y;
+                    float minPaneHeight = MinSplitterSize;
+                    float maxPaneHeight = Position.height - MinSplitterSize - SplitterSize;
+                    _splitterPosition = Mathf.Clamp(mouseY, minPaneHeight, maxPaneHeight);
+                }
+                else
+                {
+                    float mouseX = GetLocalMousePosition().x;
+                    float minPaneWidth = MinSplitterSize;
+                    float maxPaneWidth = Position.width - MinSplitterSize - SplitterSize;
+                    _splitterPosition = Mathf.Clamp(mouseX, minPaneWidth, maxPaneWidth);
+                }
+
+                if (bodyFirst)
+                    _splitterPosition = Position.width - _splitterPosition;
 
                 Repaint();
             }
         }
 
-        private static void BeginPane(EditorWindowStyle skin, ref float splitterPosition, ref Vector2 scrollPosition)
+        private static void BeginPaneVertical(EditorWindowStyle skin, ref float splitterPosition, ref Vector2 scrollPosition)
         {
-            // Set fixed width for the pane container
-            GUILayout.BeginVertical(GUILayout.Width(splitterPosition));
+            GUILayout.BeginVertical(GetStyle(skin), GUILayout.Height(splitterPosition));
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
-            GUILayout.BeginVertical(GetStyle(skin), GUILayout.ExpandWidth(true));
+        }
+
+        private static void EndPaneVertical()
+        {
+            EditorGUILayout.EndScrollView();
+            GUILayout.EndVertical();
+        }
+
+        private static void BeginPane(EditorWindowStyle skin, ref float splitterPosition, ref Vector2 scrollPosition)
+        {
+            GUILayout.BeginVertical(GetStyle(skin), GUILayout.Width(splitterPosition));
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
+                GUILayout.ExpandWidth(true),
+                GUILayout.ExpandHeight(true));
         }
 
         private static void EndPane()
         {
-            GUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
             GUILayout.EndVertical();
         }
 
         private static void BeginBody(EditorWindowStyle skin, ref Vector2 scrollPosition)
         {
-            // Body expands to fill remaining space
-            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            GUILayout.BeginVertical(GetStyle(skin), GUILayout.ExpandWidth(true));
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
-            GUILayout.BeginVertical(GetStyle(skin), GUILayout.ExpandWidth(true));
 
             if (skin == EditorWindowStyle.Window)
                 GUILayout.Space(-17);
@@ -357,7 +439,6 @@ namespace UnityEssentials
 
         private static void EndBody()
         {
-            GUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
             GUILayout.EndVertical();
         }
