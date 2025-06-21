@@ -19,12 +19,15 @@ namespace UnityEssentials
     public class EditorWindowDrawer : EditorWindow
     {
         public Rect Position => base.position;
-        public Vector2 ScrollPosition;
+        public Vector2 BodyScrollPosition;
+        public Vector2 PaneScrollPosition;
 
         private string _desiredTitle;
         private Rect _desiredPosition;
 
-        private static Vector2 s_minSize = new(256, 256);
+        private static readonly Vector2 s_minSize = new(256, 256);
+        private static readonly Color s_borderColorPro = new(0.15f, 0.15f, 0.15f);
+        private static readonly Color s_borderColorLight = new(0.65f, 0.65f, 0.65f);
 
         public EditorWindowDrawer()
         {
@@ -143,6 +146,15 @@ namespace UnityEssentials
             return this;
         }
 
+        private Action _paneAction;
+        private EditorWindowStyle _paneSkin;
+        public EditorWindowDrawer SetBodyPane(Action pane, EditorWindowStyle skin = EditorWindowStyle.None)
+        {
+            _paneAction = pane;
+            _paneSkin = skin;
+            return this;
+        }
+
         private Action _bodyAction;
         private EditorWindowStyle _bodySkin;
         public EditorWindowDrawer SetBody(Action body, EditorWindowStyle skin = EditorWindowStyle.None)
@@ -188,6 +200,7 @@ namespace UnityEssentials
             _preProcessAction = null;
             _postProcessAction = null;
             _headerAction = null;
+            _paneAction = null;
             _bodyAction = null;
             _footerAction = null;
             _initialization = null;
@@ -195,31 +208,15 @@ namespace UnityEssentials
 
         private void OnGUI()
         {
-            EditorGUI.BeginChangeCheck();
             _preProcessAction?.Invoke();
-            EditorGUI.EndChangeCheck();
 
-            if (_drawBorder)
-                BeginDrawBorder();
-
+            BeginDrawBorder(_drawBorder);
             BeginWindow();
-
-            BeginHeader(_headerSkin);
-            _headerAction?.Invoke();
-            EndHeader(_headerSkin);
-
-            BeginBody(_bodySkin, ref ScrollPosition);
-            _bodyAction?.Invoke();
-            EndBody();
-
-            BeginFooter(_footerSkin);
-            _footerAction?.Invoke();
-            EndFooter();
-
+            DrawHeader();
+            DrawBody();
+            DrawFooter();
             EndWindow();
-
-            if (_drawBorder)
-                EndDrawBorder();
+            EndDrawBorder(_drawBorder);
 
             _postProcessAction?.Invoke();
         }
@@ -236,6 +233,13 @@ namespace UnityEssentials
             GUILayout.EndVertical();
             GUILayout.Space(-1);
             GUILayout.EndHorizontal();
+        }
+
+        private void DrawHeader()
+        {
+            BeginHeader(_headerSkin);
+            _headerAction?.Invoke();
+            EndHeader(_headerSkin);
         }
 
         private static void BeginHeader(EditorWindowStyle skin)
@@ -258,10 +262,94 @@ namespace UnityEssentials
                 GUILayout.Space(-2);
         }
 
+        private float _splitterPosition = 300f; // Initialize with a reasonable default width
+        private void DrawBody()
+        {
+            if (_paneAction != null)
+            {
+                GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+
+                // Left Pane
+                BeginPane(_paneSkin, ref _splitterPosition, ref PaneScrollPosition);
+                _paneAction?.Invoke();
+                EndPane();
+
+                // Splitter
+                DrawSplitView();
+
+                // Main Body (right pane)
+                BeginBody(_bodySkin, ref BodyScrollPosition);
+                _bodyAction?.Invoke();
+                EndBody();
+
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                // Handle case without pane
+                BeginBody(_bodySkin, ref BodyScrollPosition);
+                _bodyAction?.Invoke();
+                EndBody();
+            }
+        }
+
+        private bool _isDraggingSplitter;
+        private const float MinSplitterWidth = 100f;
+        private const float SplitterWidth = 5f;
+        private void DrawSplitView()
+        {
+            var hitboxSplitter = GUILayoutUtility.GetRect(SplitterWidth, float.MaxValue,
+                GUILayout.ExpandHeight(true),
+                GUILayout.Width(SplitterWidth));
+
+            var visibleSplitter = new Rect(hitboxSplitter.x, hitboxSplitter.y, 1, hitboxSplitter.height);
+            var borderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
+            EditorGUI.DrawRect(visibleSplitter, borderColor);
+
+            // Handle splitter dragging
+            EditorGUIUtility.AddCursorRect(hitboxSplitter, MouseCursor.ResizeHorizontal);
+            if (Event.current.type == EventType.MouseDown && hitboxSplitter.Contains(GetLocalMousePosition()))
+                _isDraggingSplitter = true;
+
+            if (Event.current.type == EventType.MouseUp)
+                _isDraggingSplitter = false;
+
+            if (_isDraggingSplitter)
+            {
+                float mouseX = GetLocalMousePosition().x;
+                float minPaneWidth = MinSplitterWidth;
+                float maxPaneWidth = Position.width - MinSplitterWidth - SplitterWidth;
+                _splitterPosition = Mathf.Clamp(mouseX, minPaneWidth, maxPaneWidth);
+
+                Repaint();
+            }
+        }
+
+        private static void BeginPane(EditorWindowStyle skin, ref float splitterPosition, ref Vector2 scrollPosition)
+        {
+            // Set fixed width for the pane container
+            GUILayout.BeginVertical(GUILayout.Width(splitterPosition));
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
+                GUILayout.ExpandWidth(true),
+                GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical(GetStyle(skin), GUILayout.ExpandWidth(true));
+        }
+
+        private static void EndPane()
+        {
+            GUILayout.EndVertical();
+            EditorGUILayout.EndScrollView();
+            GUILayout.EndVertical();
+        }
+
         private static void BeginBody(EditorWindowStyle skin, ref Vector2 scrollPosition)
         {
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            GUILayout.BeginVertical(GetStyle(skin));
+            // Body expands to fill remaining space
+            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
+                GUILayout.ExpandWidth(true),
+                GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical(GetStyle(skin), GUILayout.ExpandWidth(true));
 
             if (skin == EditorWindowStyle.Window)
                 GUILayout.Space(-17);
@@ -271,6 +359,13 @@ namespace UnityEssentials
         {
             GUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
+            GUILayout.EndVertical();
+        }
+        private void DrawFooter()
+        {
+            BeginFooter(_footerSkin);
+            _footerAction?.Invoke();
+            EndFooter();
         }
 
         private static void BeginFooter(EditorWindowStyle skin)
@@ -287,21 +382,24 @@ namespace UnityEssentials
         private static void EndFooter() =>
             GUILayout.EndVertical();
 
-        private static readonly Color s_borderColorPro = new Color(0.11f, 0.11f, 0.11f);
-        private static readonly Color s_borderColorLight = new Color(0.51f, 0.51f, 0.51f);
-        private static readonly Color s_backgroundColorPro = new Color(0.22f, 0.22f, 0.22f);
-        private static readonly Color s_backgroundColorLight = new Color(0.76f, 0.76f, 0.76f);
-        private void BeginDrawBorder()
+        private void BeginDrawBorder(bool drawBorder)
         {
+            if (!drawBorder)
+                return;
+
             var borderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
-            var backgroundColor = EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
             EditorGUI.DrawRect(new Rect(0, 0, Position.width, Position.height), borderColor);
-            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), backgroundColor);
+            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), borderColor);
             GUILayout.BeginArea(new Rect(1, 1, Position.width - 2, Position.height - 2));
         }
 
-        private void EndDrawBorder() =>
+        private void EndDrawBorder(bool drawBorder)
+        {
+            if (!drawBorder)
+                return;
+
             GUILayout.EndArea();
+        }
 
         private Vector2 GetMousePosition(bool centerPosition = true, Vector2? positionOffset = null)
         {
@@ -314,12 +412,8 @@ namespace UnityEssentials
             return MouseInputFetcher.CurrentMousePosition - offset;
         }
 
-        public Vector2 GetLocalMousePosition()
-        {
-            // MouseInputFetcher.CurrentMousePosition is in screen coordinates.
-            // base.position.position is the window's top-left in screen coordinates.
-            return MouseInputFetcher.CurrentMousePosition - base.position.position;
-        }
+        public Vector2 GetLocalMousePosition() =>
+            MouseInputFetcher.CurrentMousePosition - base.position.position;
 
         private static GUIStyle GetStyle(EditorWindowStyle skin)
         {
