@@ -224,11 +224,19 @@ namespace UnityEssentials
             _postProcessAction?.Invoke();
         }
 
-        private static void BeginWindow() =>
+        private static void BeginWindow()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(-1);
             GUILayout.BeginVertical();
+        }
 
-        private static void EndWindow() =>
+        private static void EndWindow()
+        {
             GUILayout.EndVertical();
+            GUILayout.Space(-1);
+            GUILayout.EndHorizontal();
+        }
 
         private static void BeginHeader(EditorWindowStyle skin)
         {
