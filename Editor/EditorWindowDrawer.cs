@@ -319,34 +319,22 @@ namespace UnityEssentials
         {
             bool isVerticalOrientation = style == EditorPaneStyle.Top || style == EditorPaneStyle.Bottom;
             if (isVerticalOrientation)
-            {
                 BeginBodyVertical(_bodySkin, Position.width, expandHeight, SplitterPosition, ref BodyScrollPosition);
-                _bodyAction?.Invoke();
-                EndBody();
-            }
-            else
-            {
-                BeginBody(_bodySkin, ref BodyScrollPosition);
-                _bodyAction?.Invoke();
-                EndBody();
-            }
+            else BeginBody(_bodySkin, ref BodyScrollPosition);
+
+            _bodyAction?.Invoke();
+            EndBody();
         }
 
         private void DrawPane(EditorPaneStyle style, bool expandHeight = true)
         {
             bool isVerticalOrientation = style == EditorPaneStyle.Top || style == EditorPaneStyle.Bottom;
             if (isVerticalOrientation)
-            {
                 BeginPaneVertical(_paneSkin, Position.width, expandHeight, SplitterPosition, ref PaneScrollPosition);
-                _paneAction?.Invoke();
-                EndPane();
-            }
-            else
-            {
-                BeginPane(_paneSkin, SplitterPosition, ref PaneScrollPosition);
-                _paneAction?.Invoke();
-                EndPane();
-            }
+            else BeginPane(_paneSkin, SplitterPosition, ref PaneScrollPosition);
+
+            _paneAction?.Invoke();
+            EndPane();
         }
 
         private bool _isDraggingSplitter;
@@ -420,8 +408,11 @@ namespace UnityEssentials
         private static void BeginPaneVertical(EditorWindowStyle skin, float width, bool expandHeight, float splitterPosition, ref Vector2 scrollPosition)
         {
             var guiLayoutOptions = new List<GUILayoutOption>();
-            if (expandHeight) guiLayoutOptions.Add(GUILayout.ExpandHeight(true));
+
+            if (expandHeight) 
+                guiLayoutOptions.Add(GUILayout.ExpandHeight(true));
             else guiLayoutOptions.Add(GUILayout.Height(splitterPosition));
+
             guiLayoutOptions.Add(GUILayout.Width(width));
 
             GUILayout.BeginVertical(GetStyle(skin), guiLayoutOptions.ToArray());
@@ -440,9 +431,13 @@ namespace UnityEssentials
         private static void BeginBodyVertical(EditorWindowStyle skin, float? width, bool expandHeight, float splitterPosition, ref Vector2 scrollPosition)
         {
             var guiLayoutOptions = new List<GUILayoutOption>();
-            if (expandHeight) guiLayoutOptions.Add(GUILayout.ExpandHeight(true));
+
+            if (expandHeight) 
+                guiLayoutOptions.Add(GUILayout.ExpandHeight(true));
             else guiLayoutOptions.Add(GUILayout.Height(splitterPosition));
-            if (width.HasValue) guiLayoutOptions.Add(GUILayout.Width(width.Value));
+
+            if (width.HasValue) 
+                guiLayoutOptions.Add(GUILayout.Width(width.Value));
 
             GUILayout.BeginVertical(GetStyle(skin), guiLayoutOptions.ToArray());
 
@@ -475,7 +470,7 @@ namespace UnityEssentials
 
         private void DrawFooter()
         {
-            if(_paneAction != null)
+            if (_paneAction != null)
                 return;
 
             BeginFooter(_footerSkin);
