@@ -45,13 +45,20 @@ namespace UnityEssentials
         private static readonly Color s_highlightColorPro = new(0.24f, 0.37f, 0.58f);
         private static readonly Color s_highlightColorLight = new(0.22f, 0.44f, 0.9f);
 
-        public Color BorderColor = s_borderColor ??= EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
-        public Color HighlightColor = s_highlightColor ??= EditorGUIUtility.isProSkin ? s_highlightColorPro : s_highlightColorLight;
-        public Color BackgroundColor = s_backgroundColor ??= EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
+        public Color BorderColor;
+        public Color HighlightColor;
+        public Color BackgroundColor;
 
         private static Color? s_borderColor;
         private static Color? s_highlightColor;
         private static Color? s_backgroundColor;
+
+        protected virtual void OnEnable()
+        {
+            BorderColor = s_borderColor ??= EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
+            HighlightColor = s_highlightColor ??= EditorGUIUtility.isProSkin ? s_highlightColorPro : s_highlightColorLight;
+            BackgroundColor = s_backgroundColor ??= EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
+        }
 
         public EditorWindowDrawer()
         {
