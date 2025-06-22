@@ -336,9 +336,9 @@ namespace UnityEssentials
             }
         }
 
-        private bool _isDraggingSplitter;
-        private const float MinSplitterSize = 100f;
+        public float MinSplitterSize = 150f;
         private const float SplitterSize = 5f;
+        private bool _isDraggingSplitter;
         private void DrawSplitter(EditorPaneStyle style)
         {
             bool isVerticalOrientation = style == EditorPaneStyle.Top || style == EditorPaneStyle.Bottom;
