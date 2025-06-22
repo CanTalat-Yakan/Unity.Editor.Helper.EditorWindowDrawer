@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.PackageManager.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -36,8 +37,17 @@ namespace UnityEssentials
         private Rect _desiredPosition;
 
         private static readonly Vector2 s_minSize = new(256, 256);
+
         private static readonly Color s_borderColorPro = new(0.15f, 0.15f, 0.15f);
         private static readonly Color s_borderColorLight = new(0.65f, 0.65f, 0.65f);
+        private static readonly Color s_backgroundColorPro = new(0.22f, 0.22f, 0.22f);
+        private static readonly Color s_backgroundColorLight = new(0.76f, 0.76f, 0.76f);
+        private static readonly Color s_highlightColorPro = new(0.24f, 0.37f, 0.58f);
+        private static readonly Color s_highlightColorLight = new(0.22f, 0.44f, 0.9f);
+
+        public readonly Color BorderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
+        public readonly Color HighlightColor = EditorGUIUtility.isProSkin ? s_highlightColorPro : s_highlightColorLight;
+        public readonly Color BackgroundColor = EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
 
         public EditorWindowDrawer()
         {
@@ -358,8 +368,7 @@ namespace UnityEssentials
                 ? new Rect(hitboxSplitter.x, hitboxSplitter.y, hitboxSplitter.width, 1)
                 : new Rect(hitboxSplitter.x, hitboxSplitter.y, 1, hitboxSplitter.height);
 
-            var borderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
-            EditorGUI.DrawRect(visibleSplitter, borderColor);
+            EditorGUI.DrawRect(visibleSplitter, BorderColor);
 
             EditorGUIUtility.AddCursorRect(hitboxSplitter, isVerticalOrientation
                 ? MouseCursor.ResizeVertical
@@ -409,7 +418,7 @@ namespace UnityEssentials
         {
             var guiLayoutOptions = new List<GUILayoutOption>();
 
-            if (expandHeight) 
+            if (expandHeight)
                 guiLayoutOptions.Add(GUILayout.ExpandHeight(true));
             else guiLayoutOptions.Add(GUILayout.Height(splitterPosition));
 
@@ -432,11 +441,11 @@ namespace UnityEssentials
         {
             var guiLayoutOptions = new List<GUILayoutOption>();
 
-            if (expandHeight) 
+            if (expandHeight)
                 guiLayoutOptions.Add(GUILayout.ExpandHeight(true));
             else guiLayoutOptions.Add(GUILayout.Height(splitterPosition));
 
-            if (width.HasValue) 
+            if (width.HasValue)
                 guiLayoutOptions.Add(GUILayout.Width(width.Value));
 
             GUILayout.BeginVertical(GetStyle(skin), guiLayoutOptions.ToArray());
@@ -497,9 +506,8 @@ namespace UnityEssentials
             if (!drawBorder)
                 return;
 
-            var borderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
-            EditorGUI.DrawRect(new Rect(0, 0, Position.width, Position.height), borderColor);
-            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), borderColor);
+            EditorGUI.DrawRect(new Rect(0, 0, Position.width, Position.height), BorderColor);
+            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), BackgroundColor);
             GUILayout.BeginArea(new Rect(1, 1, Position.width - 2, Position.height - 2));
         }
 
