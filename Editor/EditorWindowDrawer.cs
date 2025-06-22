@@ -45,9 +45,13 @@ namespace UnityEssentials
         private static readonly Color s_highlightColorPro = new(0.24f, 0.37f, 0.58f);
         private static readonly Color s_highlightColorLight = new(0.22f, 0.44f, 0.9f);
 
-        public Color BorderColor;
-        public Color HighlightColor;
-        public Color BackgroundColor;
+        public Color BorderColor = s_borderColor ??= EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
+        public Color HighlightColor = s_highlightColor ??= EditorGUIUtility.isProSkin ? s_highlightColorPro : s_highlightColorLight;
+        public Color BackgroundColor = s_backgroundColor ??= EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
+
+        private static Color? s_borderColor;
+        private static Color? s_highlightColor;
+        private static Color? s_backgroundColor;
 
         public EditorWindowDrawer()
         {
@@ -57,8 +61,6 @@ namespace UnityEssentials
             _desiredPosition = new Rect(position.x, position.y, size.x, size.y);
 
             base.minSize = s_minSize;
-
-            InitializeColors();
         }
 
         public EditorWindowDrawer(string title = null, Vector2? minSize = null, Vector2? size = null, Vector2? position = null, bool centerPosition = true)
@@ -72,8 +74,6 @@ namespace UnityEssentials
 
             base.titleContent = new GUIContent(_desiredTitle);
             base.minSize = minSize.Value;
-
-            InitializeColors();
         }
 
         public EditorWindowDrawer ShowWindow()
@@ -119,13 +119,6 @@ namespace UnityEssentials
         {
             _drawBorder = true;
             return this;
-        }
-
-        private void InitializeColors()
-        {
-            BorderColor = EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
-            HighlightColor = EditorGUIUtility.isProSkin ? s_highlightColorPro : s_highlightColorLight;
-            BackgroundColor = EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
         }
 
         private EditorApplication.CallbackFunction _editorApplicationCallback;
