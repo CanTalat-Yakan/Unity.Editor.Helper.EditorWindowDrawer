@@ -336,7 +336,7 @@ namespace UnityEssentials
             }
         }
 
-        public float MinSplitterSize = 150f;
+        public float MinSplitterSize = 125f;
         private const float SplitterSize = 5f;
         private bool _isDraggingSplitter;
         private void DrawSplitter(EditorPaneStyle style)
