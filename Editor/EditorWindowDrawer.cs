@@ -175,21 +175,25 @@ namespace UnityEssentials
         }
 
         private Action _paneAction;
+        private GenericMenu _paneMenu;
         private EditorPaneStyle _paneStyle;
         private EditorWindowStyle _paneSkin;
-        public EditorWindowDrawer SetPane(Action pane, EditorPaneStyle style = EditorPaneStyle.Left, EditorWindowStyle skin = EditorWindowStyle.None)
+        public EditorWindowDrawer SetPane(Action pane, EditorPaneStyle style = EditorPaneStyle.Left, EditorWindowStyle skin = EditorWindowStyle.None, GenericMenu genericMenu = null)
         {
             _paneAction = pane;
+            _paneMenu = genericMenu;
             _paneStyle = style;
             _paneSkin = skin;
             return this;
         }
 
         private Action _bodyAction;
+        private GenericMenu _bodyMenu;
         private EditorWindowStyle _bodySkin;
-        public EditorWindowDrawer SetBody(Action body, EditorWindowStyle skin = EditorWindowStyle.None)
+        public EditorWindowDrawer SetBody(Action body, EditorWindowStyle skin = EditorWindowStyle.None, GenericMenu genericMenu = null)
         {
             _bodyAction = body;
+            _bodyMenu = genericMenu;
             _bodySkin = skin;
             return this;
         }
@@ -399,6 +403,13 @@ namespace UnityEssentials
             else BeginPane(_paneSkin, Position.height, SplitterPosition, ref PaneScrollPosition);
 
             _paneAction?.Invoke();
+
+            if (_paneMenu != null && Event.current.type == EventType.ContextClick)
+            {
+                _paneMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+                Event.current.Use();
+            }
+
             EndPane();
         }
 
@@ -436,6 +447,12 @@ namespace UnityEssentials
             else BeginBody(_bodySkin, Position.height, paneStyle == null, ref BodyScrollPosition);
 
             _bodyAction?.Invoke();
+
+            if (_bodyMenu != null && Event.current.type == EventType.ContextClick)
+            {
+                _bodyMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+                Event.current.Use();
+            }
 
             if (paneStyle != null)
             {
