@@ -60,7 +60,7 @@ namespace UnityEssentials
 
             AddUpdate(() =>
             {
-                if (EditorApplication.isCompiling || EditorApplication.isUpdating || EditorApplication.isPlaying)
+                if (_headerAction == null && _bodyAction == null && _paneAction == null && _footerAction == null)
                     Close();
             });
         }
@@ -76,7 +76,6 @@ namespace UnityEssentials
 
         public void OnDestroy()
         {
-            RemoveUpdate();
             _preProcessAction = null;
             _postProcessAction = null;
             _headerAction = null;
@@ -84,6 +83,8 @@ namespace UnityEssentials
             _bodyAction = null;
             _footerAction = null;
             _initialization = null;
+
+            RemoveUpdate();
         }
 
         private void OnGUI()
