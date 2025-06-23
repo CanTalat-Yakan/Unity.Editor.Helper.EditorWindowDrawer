@@ -30,6 +30,7 @@ namespace UnityEssentials
         public Rect Position => base.position;
         public Vector2 BodyScrollPosition;
         public Vector2 PaneScrollPosition;
+        public bool ContextMenuHandled = false;
 
         private string _desiredTitle;
         private Rect _desiredPosition;
@@ -56,6 +57,48 @@ namespace UnityEssentials
             BorderColor = s_borderColor ??= EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
             HighlightColor = s_highlightColor ??= EditorGUIUtility.isProSkin ? s_highlightColorPro : s_highlightColorLight;
             BackgroundColor = s_backgroundColor ??= EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
+
+            AddUpdate(() =>
+            {
+                if (EditorApplication.isCompiling || EditorApplication.isUpdating || EditorApplication.isPlaying)
+                    Close();
+            });
+        }
+
+        private bool _isUnfocusable = false;
+        public void OnLostFocus()
+        {
+            if (_isUnfocusable)
+                Close();
+
+            RemoveUpdate();
+        }
+
+        public void OnDestroy()
+        {
+            RemoveUpdate();
+            _preProcessAction = null;
+            _postProcessAction = null;
+            _headerAction = null;
+            _paneAction = null;
+            _bodyAction = null;
+            _footerAction = null;
+            _initialization = null;
+        }
+
+        private void OnGUI()
+        {
+            _preProcessAction?.Invoke();
+
+            BeginDrawBorder(_drawBorder);
+            BeginWindow();
+            DrawHeader();
+            DrawBodySplitView();
+            DrawFooter();
+            EndWindow();
+            EndDrawBorder(_drawBorder);
+
+            _postProcessAction?.Invoke();
         }
 
         public EditorWindowDrawer()
@@ -129,7 +172,7 @@ namespace UnityEssentials
         private EditorApplication.CallbackFunction _editorApplicationCallback;
         public EditorWindowDrawer AddUpdate(Action updateAction)
         {
-            RemoveUpdate(); // Ensure no duplicate
+            RemoveUpdate();
             _editorApplicationCallback = new(updateAction);
             EditorApplication.update += _editorApplicationCallback;
             return this;
@@ -219,42 +262,6 @@ namespace UnityEssentials
             return this;
         }
 
-        private bool _isUnfocusable = false;
-        public void OnLostFocus()
-        {
-            if (_isUnfocusable)
-                Close();
-
-            RemoveUpdate();
-        }
-
-        public void OnDestroy()
-        {
-            RemoveUpdate();
-            _preProcessAction = null;
-            _postProcessAction = null;
-            _headerAction = null;
-            _paneAction = null;
-            _bodyAction = null;
-            _footerAction = null;
-            _initialization = null;
-        }
-
-        private void OnGUI()
-        {
-            _preProcessAction?.Invoke();
-
-            BeginDrawBorder(_drawBorder);
-            BeginWindow();
-            DrawHeader();
-            DrawBodySplitView();
-            DrawFooter();
-            EndWindow();
-            EndDrawBorder(_drawBorder);
-
-            _postProcessAction?.Invoke();
-        }
-
         private static void BeginWindow()
         {
             GUILayout.BeginHorizontal();
@@ -304,7 +311,7 @@ namespace UnityEssentials
         {
             if (_paneAction == null)
             {
-                DrawBody();
+                DrawBody(); 
                 return;
             }
 
@@ -376,7 +383,8 @@ namespace UnityEssentials
             {
                 if (isVerticalOrientation)
                 {
-                    float headerOffset = _headerAction != null ? 21 : 0;
+                    bool isToolbarHeaderActive = _headerAction != null && _headerSkin == EditorWindowStyle.Toolbar;
+                    float headerOffset = isToolbarHeaderActive ? 21 : 0;
                     float mouseY = GetLocalMousePosition().y - headerOffset;
                     float minPaneHeight = MinSplitterSize;
                     float maxPaneHeight = Position.height - MinSplitterSize - SplitterSize;
@@ -404,8 +412,9 @@ namespace UnityEssentials
 
             _paneAction?.Invoke();
 
-            if (_paneMenu != null && Event.current.type == EventType.ContextClick)
+            if (!ContextMenuHandled && _paneMenu != null && Event.current.type == EventType.ContextClick)
             {
+                ContextMenuHandled = false;
                 _paneMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
                 Event.current.Use();
             }
@@ -448,8 +457,9 @@ namespace UnityEssentials
 
             _bodyAction?.Invoke();
 
-            if (_bodyMenu != null && Event.current.type == EventType.ContextClick)
+            if (!ContextMenuHandled && _bodyMenu != null && Event.current.type == EventType.ContextClick)
             {
+                ContextMenuHandled = false;
                 _bodyMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
                 Event.current.Use();
             }
