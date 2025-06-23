@@ -2,9 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEditor.PackageManager.UI;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace UnityEssentials
 {
@@ -63,18 +61,18 @@ namespace UnityEssentials
         public EditorWindowDrawer()
         {
             var size = s_minSize;
-            var position = GetMousePosition(true, size);
+            var position = GetMousePosition(size);
 
             _desiredPosition = new Rect(position.x, position.y, size.x, size.y);
 
             base.minSize = s_minSize;
         }
 
-        public EditorWindowDrawer(string title = null, Vector2? minSize = null, Vector2? size = null, Vector2? position = null, bool centerPosition = true)
+        public EditorWindowDrawer(string title = null, Vector2? minSize = null, Vector2? size = null, Vector2? position = null, bool centerX = true, bool centerY = false)
         {
             size ??= s_minSize;
             minSize ??= s_minSize;
-            position ??= GetMousePosition(centerPosition, size);
+            position ??= GetMousePosition(size.Value, centerX, centerY);
 
             _desiredTitle = string.IsNullOrEmpty(title) ? string.Empty : title;
             _desiredPosition = new Rect(position.Value.x, position.Value.y, size.Value.x, size.Value.y);
@@ -439,7 +437,7 @@ namespace UnityEssentials
 
             _bodyAction?.Invoke();
 
-            if(paneStyle != null)
+            if (paneStyle != null)
             {
                 GUILayout.FlexibleSpace();
 
@@ -549,14 +547,11 @@ namespace UnityEssentials
             GUILayout.EndArea();
         }
 
-        private Vector2 GetMousePosition(bool centerPosition = true, Vector2? positionOffset = null)
+        private Vector2 GetMousePosition(Vector2 offset, bool centerX = true, bool centerY = true)
         {
-            var offset = Vector2.zero;
-            if (positionOffset.HasValue && centerPosition)
-            {
-                offset = positionOffset.Value;
-                offset /= 2;
-            }
+            offset.x = centerX ? offset.x / 2 : 0;
+            offset.y = centerY ? offset.y / 2 : 0;
+
             return MouseInputFetcher.CurrentMousePosition - offset;
         }
 
