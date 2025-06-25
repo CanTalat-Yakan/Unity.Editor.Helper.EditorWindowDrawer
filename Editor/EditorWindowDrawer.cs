@@ -61,7 +61,10 @@ namespace UnityEssentials
             AddUpdate(() =>
             {
                 if (_headerAction == null && _bodyAction == null && _paneAction == null && _footerAction == null)
+                {
+                    RemoveUpdate();
                     Close();
+                }
             });
         }
 
