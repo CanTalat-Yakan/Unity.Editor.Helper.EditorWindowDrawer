@@ -1,6 +1,4 @@
 #if UNITY_EDITOR
-using System;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -25,17 +23,65 @@ namespace UnityEssentials
         Bottom,
     }
 
-    public class EditorWindowDrawer : EditorWindow
+    public partial class EditorWindowDrawer : EditorWindow
     {
         public Rect Position => base.position;
         public Vector2 BodyScrollPosition;
         public Vector2 PaneScrollPosition;
         public bool ContextMenuHandled = false;
 
+        public Color BorderColor;
+        public Color HighlightColor;
+        public Color BackgroundColor;
+
         private string _desiredTitle;
         private Rect _desiredPosition;
 
         private static readonly Vector2 s_minSize = new(256, 256);
+
+        public EditorWindowDrawer()
+        {
+            var size = s_minSize;
+            var position = GetMousePosition(size);
+
+            _desiredPosition = new Rect(position.x, position.y, size.x, size.y);
+
+            base.minSize = s_minSize;
+        }
+
+        public EditorWindowDrawer(
+            string title = null,
+            Vector2? minSize = null,
+            Vector2? size = null,
+            Vector2? position = null,
+            bool centerX = true,
+            bool centerY = false)
+        {
+            size ??= s_minSize;
+            minSize ??= s_minSize;
+            position ??= GetMousePosition(size.Value, centerX, centerY);
+
+            _desiredTitle = string.IsNullOrEmpty(title) ? string.Empty : title;
+            _desiredPosition = new Rect(position.Value.x, position.Value.y, size.Value.x, size.Value.y);
+
+            base.titleContent = new GUIContent(_desiredTitle);
+            base.minSize = minSize.Value;
+        }
+
+        private void OnGUI()
+        {
+            _preProcessAction?.Invoke();
+
+            BeginDrawBorder(_drawBorder);
+            BeginWindow();
+            DrawHeader();
+            DrawBodySplitView();
+            DrawFooter();
+            EndWindow();
+            EndDrawBorder(_drawBorder);
+
+            _postProcessAction?.Invoke();
+        }
 
         private static readonly Color s_borderColorPro = new(0.15f, 0.15f, 0.15f);
         private static readonly Color s_borderColorLight = new(0.65f, 0.65f, 0.65f);
@@ -43,10 +89,6 @@ namespace UnityEssentials
         private static readonly Color s_backgroundColorLight = new(0.76f, 0.76f, 0.76f);
         private static readonly Color s_highlightColorPro = new(0.24f, 0.37f, 0.58f);
         private static readonly Color s_highlightColorLight = new(0.22f, 0.44f, 0.9f);
-
-        public Color BorderColor;
-        public Color HighlightColor;
-        public Color BackgroundColor;
 
         private static Color? s_borderColor;
         private static Color? s_highlightColor;
@@ -88,519 +130,6 @@ namespace UnityEssentials
             _initialization = null;
 
             RemoveUpdate();
-        }
-
-        private void OnGUI()
-        {
-            _preProcessAction?.Invoke();
-
-            BeginDrawBorder(_drawBorder);
-            BeginWindow();
-            DrawHeader();
-            DrawBodySplitView();
-            DrawFooter();
-            EndWindow();
-            EndDrawBorder(_drawBorder);
-
-            _postProcessAction?.Invoke();
-        }
-
-        public EditorWindowDrawer()
-        {
-            var size = s_minSize;
-            var position = GetMousePosition(size);
-
-            _desiredPosition = new Rect(position.x, position.y, size.x, size.y);
-
-            base.minSize = s_minSize;
-        }
-
-        public EditorWindowDrawer(string title = null, Vector2? minSize = null, Vector2? size = null, Vector2? position = null, bool centerX = true, bool centerY = false)
-        {
-            size ??= s_minSize;
-            minSize ??= s_minSize;
-            position ??= GetMousePosition(size.Value, centerX, centerY);
-
-            _desiredTitle = string.IsNullOrEmpty(title) ? string.Empty : title;
-            _desiredPosition = new Rect(position.Value.x, position.Value.y, size.Value.x, size.Value.y);
-
-            base.titleContent = new GUIContent(_desiredTitle);
-            base.minSize = minSize.Value;
-        }
-
-        public EditorWindowDrawer ShowWindow()
-        {
-            base.Show();
-            base.Focus();
-            base.position = _desiredPosition;
-            _initialization?.Invoke();
-            return this;
-        }
-
-        public EditorWindowDrawer ShowUtility()
-        {
-            base.ShowUtility();
-            base.Focus();
-            base.position = _desiredPosition;
-            base.titleContent = new GUIContent(_desiredTitle);
-            _initialization?.Invoke();
-            return this;
-        }
-
-        public EditorWindowDrawer ShowPopup()
-        {
-            base.ShowPopup();
-            base.Focus();
-            _isUnfocusable = true;
-            _initialization?.Invoke();
-            return this;
-        }
-
-        public EditorWindowDrawer ShowAsDropDown(Rect rect, Vector2? size)
-        {
-            size ??= s_minSize;
-            base.ShowAsDropDown(GUIUtility.GUIToScreenRect(rect), size.Value);
-            base.Focus();
-            _isUnfocusable = true;
-            _initialization?.Invoke();
-            return this;
-        }
-
-        private bool _drawBorder;
-        public EditorWindowDrawer SetDrawBorder()
-        {
-            _drawBorder = true;
-            return this;
-        }
-
-        private EditorApplication.CallbackFunction _editorApplicationCallback;
-        public EditorWindowDrawer AddUpdate(Action updateAction)
-        {
-            RemoveUpdate();
-            _editorApplicationCallback = new(updateAction);
-            EditorApplication.update += _editorApplicationCallback;
-            return this;
-        }
-
-        public void RemoveUpdate()
-        {
-            if (_editorApplicationCallback != null)
-            {
-                EditorApplication.update -= _editorApplicationCallback;
-                _editorApplicationCallback = null;
-            }
-        }
-
-        private Action _initialization;
-        public EditorWindowDrawer SetInitialization(Action initialization)
-        {
-            _initialization = initialization;
-            return this;
-        }
-
-        private Action _preProcessAction;
-        public EditorWindowDrawer SetPreProcess(Action preProcess)
-        {
-            _preProcessAction = preProcess;
-            return this;
-        }
-
-        private Action _postProcessAction;
-        public EditorWindowDrawer SetPostProcess(Action postProcess)
-        {
-            _postProcessAction = postProcess;
-            return this;
-        }
-
-        private Action _headerAction;
-        private EditorWindowStyle _headerSkin;
-        public EditorWindowDrawer SetHeader(Action header, EditorWindowStyle skin = EditorWindowStyle.None)
-        {
-            _headerAction = header;
-            _headerSkin = skin;
-            return this;
-        }
-
-        private Action _paneAction;
-        private GenericMenu _paneMenu;
-        private EditorPaneStyle _paneStyle;
-        private EditorWindowStyle _paneSkin;
-        public EditorWindowDrawer SetPane(Action pane, EditorPaneStyle style = EditorPaneStyle.Left, EditorWindowStyle skin = EditorWindowStyle.None, GenericMenu genericMenu = null)
-        {
-            _paneAction = pane;
-            _paneMenu = genericMenu;
-            _paneStyle = style;
-            _paneSkin = skin;
-            return this;
-        }
-
-        private Action _bodyAction;
-        private GenericMenu _bodyMenu;
-        private EditorWindowStyle _bodySkin;
-        public EditorWindowDrawer SetBody(Action body, EditorWindowStyle skin = EditorWindowStyle.None, GenericMenu genericMenu = null)
-        {
-            _bodyAction = body;
-            _bodyMenu = genericMenu;
-            _bodySkin = skin;
-            return this;
-        }
-
-        private Action _footerAction;
-        private EditorWindowStyle _footerSkin;
-        public EditorWindowDrawer SetFooter(Action footer, EditorWindowStyle skin = EditorWindowStyle.None)
-        {
-            _footerAction = footer;
-            _footerSkin = skin;
-            return this;
-        }
-
-        public EditorWindowDrawer GetCloseEvent(out Action closeEvent)
-        {
-            closeEvent = base.Close;
-            return this;
-        }
-
-        public EditorWindowDrawer GetRepaintEvent(out Action repaintEvent)
-        {
-            repaintEvent = base.Repaint;
-            return this;
-        }
-
-        private static void BeginWindow()
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(-1);
-            GUILayout.BeginVertical();
-        }
-
-        private static void EndWindow()
-        {
-            GUILayout.EndVertical();
-            GUILayout.Space(-1);
-            GUILayout.EndHorizontal();
-        }
-
-        private void DrawHeader()
-        {
-            if (_paneAction != null && _headerSkin != EditorWindowStyle.Toolbar)
-                return;
-
-            BeginHeader(_headerSkin, Position.width + 2);
-            _headerAction?.Invoke();
-            EndHeader(_headerSkin);
-        }
-
-        private static void BeginHeader(EditorWindowStyle skin, float width)
-        {
-            if (skin == EditorWindowStyle.Toolbar)
-                GUILayout.BeginHorizontal(GetStyle(skin), GUILayout.Width(width));
-            else GUILayout.BeginVertical(GetStyle(skin));
-
-            if (skin == EditorWindowStyle.Window)
-                GUILayout.Space(-17);
-        }
-
-        private static void EndHeader(EditorWindowStyle skin)
-        {
-            if (skin == EditorWindowStyle.Toolbar)
-                GUILayout.EndHorizontal();
-            else GUILayout.EndVertical();
-
-            if (skin == EditorWindowStyle.HelpBox)
-                GUILayout.Space(-2);
-        }
-
-        public float SplitterPosition = 300f;
-        private void DrawBodySplitView()
-        {
-            if (_paneAction == null)
-            {
-                DrawBody(); 
-                return;
-            }
-
-            switch (_paneStyle)
-            {
-                case EditorPaneStyle.Left:
-                    GUILayout.BeginHorizontal();
-                    DrawPane(_paneStyle);
-                    DrawSplitter(_paneStyle);
-                    GUILayout.Space(-SplitterSize);
-                    DrawBody(_paneStyle);
-                    GUILayout.EndHorizontal();
-                    break;
-                case EditorPaneStyle.Right:
-                    GUILayout.BeginHorizontal();
-                    DrawBody(_paneStyle);
-                    DrawSplitter(_paneStyle);
-                    DrawPane(_paneStyle);
-                    GUILayout.EndHorizontal();
-                    break;
-                case EditorPaneStyle.Top:
-                    DrawPane(_paneStyle, false);
-                    DrawSplitter(_paneStyle);
-                    DrawBody(_paneStyle);
-                    break;
-                case EditorPaneStyle.Bottom:
-                    DrawBody(_paneStyle, false);
-                    DrawSplitter(_paneStyle);
-                    DrawPane(_paneStyle);
-                    break;
-            }
-        }
-
-        public float MinSplitterSize = 50;
-        private const float SplitterSize = 5f;
-        private bool _isDraggingSplitter;
-        private void DrawSplitter(EditorPaneStyle style)
-        {
-            bool isVerticalOrientation = style == EditorPaneStyle.Top || style == EditorPaneStyle.Bottom;
-            bool paneFirst = style == EditorPaneStyle.Left || style == EditorPaneStyle.Top;
-
-            Rect hitboxSplitter;
-            if (isVerticalOrientation)
-                hitboxSplitter = GUILayoutUtility.GetRect(float.MaxValue, SplitterSize,
-                    GUILayout.ExpandWidth(false),
-                    GUILayout.Height(SplitterSize));
-            else hitboxSplitter = GUILayoutUtility.GetRect(SplitterSize, float.MaxValue,
-                    GUILayout.ExpandHeight(false),
-                    GUILayout.Width(SplitterSize));
-
-            var visibleSplitter = isVerticalOrientation
-                ? new Rect(hitboxSplitter.x, hitboxSplitter.y, hitboxSplitter.width, 1)
-                : new Rect(hitboxSplitter.x, hitboxSplitter.y, 1, hitboxSplitter.height);
-
-            EditorGUI.DrawRect(visibleSplitter, BorderColor);
-
-            EditorGUIUtility.AddCursorRect(hitboxSplitter, isVerticalOrientation
-                ? MouseCursor.ResizeVertical
-                : MouseCursor.ResizeHorizontal);
-
-            if (Event.current.type == EventType.MouseDown)
-                if (hitboxSplitter.Contains(GetLocalMousePosition()))
-                    _isDraggingSplitter = true;
-
-            if (Event.current.type == EventType.MouseUp)
-                _isDraggingSplitter = false;
-
-            if (_isDraggingSplitter)
-            {
-                if (isVerticalOrientation)
-                {
-                    bool isToolbarHeaderActive = _headerAction != null && _headerSkin == EditorWindowStyle.Toolbar;
-                    float headerOffset = isToolbarHeaderActive ? 21 : 0;
-                    float mouseY = GetLocalMousePosition().y - headerOffset;
-                    float minPaneHeight = MinSplitterSize;
-                    float maxPaneHeight = Position.height - MinSplitterSize - SplitterSize;
-                    SplitterPosition = Mathf.Clamp(mouseY, minPaneHeight, maxPaneHeight);
-                }
-                else
-                {
-                    float mouseX = GetLocalMousePosition().x;
-                    float minPaneWidth = MinSplitterSize;
-                    float maxPaneWidth = Position.width - MinSplitterSize - SplitterSize;
-                    float splitterPosition = Mathf.Clamp(mouseX, minPaneWidth, maxPaneWidth);
-                    SplitterPosition = paneFirst ? splitterPosition : Position.width - splitterPosition;
-                }
-
-                Repaint();
-            }
-        }
-
-        private void DrawPane(EditorPaneStyle paneStyle, bool expandHeight = true)
-        {
-            bool isVerticalOrientation = paneStyle == EditorPaneStyle.Top || paneStyle == EditorPaneStyle.Bottom;
-            if (isVerticalOrientation)
-                BeginPaneVerticalLayout(_paneSkin, Position.width, expandHeight, SplitterPosition, ref PaneScrollPosition);
-            else BeginPane(_paneSkin, Position.height, SplitterPosition, ref PaneScrollPosition);
-
-            _paneAction?.Invoke();
-
-            if (!ContextMenuHandled && _paneMenu != null && Event.current.type == EventType.ContextClick)
-            {
-                ContextMenuHandled = false;
-                _paneMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
-                Event.current.Use();
-            }
-
-            EndPane();
-        }
-
-        private static void BeginPane(EditorWindowStyle skin, float height, float splitterPosition, ref Vector2 scrollPosition)
-        {
-            GUILayoutOption[] guiLayoutOptions = { GUILayout.Height(height) };
-
-            GUILayout.BeginVertical(GetStyle(skin), GUILayout.Width(splitterPosition));
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, guiLayoutOptions);
-        }
-
-        private static void BeginPaneVerticalLayout(EditorWindowStyle skin, float width, bool expandHeight, float splitterPosition, ref Vector2 scrollPosition)
-        {
-            var guiLayoutOptions = new List<GUILayoutOption>() { GUILayout.Width(width) };
-
-            if (expandHeight)
-                guiLayoutOptions.Add(GUILayout.ExpandHeight(true));
-            else guiLayoutOptions.Add(GUILayout.Height(splitterPosition));
-
-            GUILayout.BeginVertical(GetStyle(skin), guiLayoutOptions.ToArray());
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-        }
-
-        private static void EndPane()
-        {
-            EditorGUILayout.EndScrollView();
-            GUILayout.EndVertical();
-        }
-
-        private void DrawBody(EditorPaneStyle? paneStyle = null, bool expandHeight = true)
-        {
-            bool isVerticalOrientation = paneStyle == EditorPaneStyle.Top || paneStyle == EditorPaneStyle.Bottom;
-            if (isVerticalOrientation)
-                BeginBodyVerticalLayout(_bodySkin, Position.width, expandHeight, SplitterPosition, ref BodyScrollPosition);
-            else BeginBody(_bodySkin, Position.height, paneStyle == null, ref BodyScrollPosition);
-
-            _bodyAction?.Invoke();
-
-            if (!ContextMenuHandled && _bodyMenu != null && Event.current.type == EventType.ContextClick)
-            {
-                ContextMenuHandled = false;
-                _bodyMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
-                Event.current.Use();
-            }
-
-            if (paneStyle != null)
-            {
-                GUILayout.FlexibleSpace();
-
-                BeginFooter(_footerSkin, isVerticalOrientation || paneStyle == EditorPaneStyle.Right);
-                _footerAction?.Invoke();
-                EndFooter(_footerSkin, isVerticalOrientation);
-
-                if (!isVerticalOrientation)
-                    GUILayout.Space(23);
-            }
-
-            EndBody();
-        }
-
-        private static void BeginBody(EditorWindowStyle skin, float height, bool expandHeight, ref Vector2 scrollPosition)
-        {
-            var guiLayoutOptions = new List<GUILayoutOption>();
-
-            if (expandHeight)
-                guiLayoutOptions.Add(GUILayout.ExpandHeight(true));
-            else guiLayoutOptions.Add(GUILayout.Height(height));
-
-            GUILayout.BeginVertical(GetStyle(skin), GUILayout.ExpandWidth(true));
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, guiLayoutOptions.ToArray());
-
-            if (skin == EditorWindowStyle.Window)
-                GUILayout.Space(-17);
-        }
-
-        private static void BeginBodyVerticalLayout(EditorWindowStyle skin, float width, bool expandHeight, float splitterPosition, ref Vector2 scrollPosition)
-        {
-            var guiLayoutOptions = new List<GUILayoutOption>() { GUILayout.Width(width) };
-
-            if (expandHeight)
-                guiLayoutOptions.Add(GUILayout.ExpandHeight(true));
-            else guiLayoutOptions.Add(GUILayout.Height(splitterPosition));
-
-            GUILayout.BeginVertical(GetStyle(skin), guiLayoutOptions.ToArray());
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-
-            if (skin == EditorWindowStyle.Window)
-                GUILayout.Space(-17);
-        }
-
-        private static void EndBody()
-        {
-            EditorGUILayout.EndScrollView();
-            GUILayout.EndVertical();
-        }
-
-        private void DrawFooter()
-        {
-            if (_paneAction != null)
-                return;
-
-            BeginFooter(_footerSkin, false);
-            _footerAction?.Invoke();
-            EndFooter(_footerSkin, false);
-        }
-
-        private static void BeginFooter(EditorWindowStyle skin, bool isVerticalOrientation)
-        {
-            if (skin == EditorWindowStyle.HelpBox)
-                GUILayout.Space(-2);
-
-            if (skin == EditorWindowStyle.Window)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(3);
-            }
-
-            GUILayout.BeginVertical(GetStyle(skin));
-
-            if (skin == EditorWindowStyle.Window)
-                GUILayout.Space(-17);
-        }
-
-        private static void EndFooter(EditorWindowStyle skin, bool isVerticalOrientation)
-        {
-            if (skin == EditorWindowStyle.Window)
-            {
-                GUILayout.EndVertical();
-                GUILayout.Space(isVerticalOrientation ? 2 : 4);
-            }
-
-            GUILayout.EndHorizontal();
-
-            if (skin == EditorWindowStyle.Window && isVerticalOrientation)
-                GUILayout.Space(2);
-        }
-
-        private void BeginDrawBorder(bool drawBorder)
-        {
-            if (!drawBorder)
-                return;
-
-            EditorGUI.DrawRect(new Rect(0, 0, Position.width, Position.height), BorderColor);
-            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), BackgroundColor);
-            GUILayout.BeginArea(new Rect(1, 1, Position.width - 2, Position.height - 2));
-        }
-
-        private void EndDrawBorder(bool drawBorder)
-        {
-            if (!drawBorder)
-                return;
-
-            GUILayout.EndArea();
-        }
-
-        private Vector2 GetMousePosition(Vector2 offset, bool centerX = true, bool centerY = true)
-        {
-            offset.x = centerX ? offset.x / 2 : 0;
-            offset.y = centerY ? offset.y / 2 : 0;
-
-            return MouseInputFetcher.CurrentMousePosition - offset;
-        }
-
-        public Vector2 GetLocalMousePosition() =>
-            MouseInputFetcher.CurrentMousePosition - base.position.position;
-
-        private static GUIStyle GetStyle(EditorWindowStyle skin)
-        {
-            return skin switch
-            {
-                EditorWindowStyle.Box => GUI.skin.box,
-                EditorWindowStyle.Window => GUI.skin.window,
-                EditorWindowStyle.HelpBox => EditorStyles.helpBox,
-                EditorWindowStyle.Toolbar => EditorStyles.toolbar,
-                EditorWindowStyle.Margin => EditorStyles.inspectorFullWidthMargins,
-                EditorWindowStyle.BigMargin => EditorStyles.inspectorDefaultMargins,
-                EditorWindowStyle.None or _ => GUIStyle.none,
-            };
         }
     }
 }
