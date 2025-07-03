@@ -21,6 +21,8 @@ namespace UnityEssentials
         {
             return skin switch
             {
+                EditorWindowStyle.Dark => DarkStyle,
+                EditorWindowStyle.Light => LightStyle,
                 EditorWindowStyle.Box => GUI.skin.box,
                 EditorWindowStyle.Window => GUI.skin.window,
                 EditorWindowStyle.HelpBox => EditorStyles.helpBox,
@@ -30,6 +32,24 @@ namespace UnityEssentials
                 EditorWindowStyle.None or _ => GUIStyle.none,
             };
         }
+
+        private static GUIStyle _darkStyle;
+        public static GUIStyle DarkStyle => _darkStyle ??= new GUIStyle()
+        {
+            normal = new GUIStyleState()
+            {
+                background = GetBackgroundTexture(DarkColor),
+            },
+        };
+
+        private static GUIStyle _lightStyle;
+        public static GUIStyle LightStyle => _lightStyle ??= new GUIStyle()
+        {
+            normal = new GUIStyleState()
+            {
+                background = GetBackgroundTexture(LightColor),
+            },
+        };
     }
 }
 #endif

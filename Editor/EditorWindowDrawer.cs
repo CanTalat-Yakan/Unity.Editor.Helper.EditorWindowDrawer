@@ -12,7 +12,9 @@ namespace UnityEssentials
         Box,
         Window,
         HelpBox,
-        Toolbar
+        Toolbar,
+        Dark,
+        Light
     }
 
     public enum EditorPaneStyle
@@ -30,9 +32,10 @@ namespace UnityEssentials
         public Vector2 PaneScrollPosition;
         public bool ContextMenuHandled = false;
 
-        public Color BorderColor;
-        public Color HighlightColor;
-        public Color BackgroundColor;
+        public static Color NormalColor;
+        public static Color HighlightColor;
+        public static Color DarkColor;
+        public static Color LightColor;
 
         private string _desiredTitle;
         private Rect _desiredPosition;
@@ -83,22 +86,26 @@ namespace UnityEssentials
             _postProcessAction?.Invoke();
         }
 
-        private static readonly Color s_borderColorPro = new(0.15f, 0.15f, 0.15f);
-        private static readonly Color s_borderColorLight = new(0.65f, 0.65f, 0.65f);
-        private static readonly Color s_backgroundColorPro = new(0.22f, 0.22f, 0.22f);
-        private static readonly Color s_backgroundColorLight = new(0.76f, 0.76f, 0.76f);
+        private static readonly Color s_defaultColorPro = new(0.22f, 0.22f, 0.22f);
+        private static readonly Color s_defaultColorLight = new(0.76f, 0.76f, 0.76f);
         private static readonly Color s_highlightColorPro = new(0.24f, 0.37f, 0.58f);
         private static readonly Color s_highlightColorLight = new(0.22f, 0.44f, 0.9f);
+        private static readonly Color s_darkColorPro = new(0.2f, 0.2f, 0.2f);
+        private static readonly Color s_darkColorLight = new(0.65f, 0.65f, 0.65f);
+        private static readonly Color s_lightColorPro = new(0.25f, 0.25f, 0.25f);
+        private static readonly Color s_lightColorLight = new(0.86f, 0.86f, 0.86f);
 
-        private static Color? s_borderColor;
+        private static Color? s_defaultColor;
         private static Color? s_highlightColor;
-        private static Color? s_backgroundColor;
+        private static Color? s_darkColor;
+        private static Color? s_lightColor;
 
         protected virtual void OnEnable()
         {
-            BorderColor = s_borderColor ??= EditorGUIUtility.isProSkin ? s_borderColorPro : s_borderColorLight;
+            NormalColor = s_defaultColor ??= EditorGUIUtility.isProSkin ? s_defaultColorPro : s_defaultColorLight;
             HighlightColor = s_highlightColor ??= EditorGUIUtility.isProSkin ? s_highlightColorPro : s_highlightColorLight;
-            BackgroundColor = s_backgroundColor ??= EditorGUIUtility.isProSkin ? s_backgroundColorPro : s_backgroundColorLight;
+            DarkColor = s_darkColor ??= EditorGUIUtility.isProSkin ? s_darkColorPro : s_darkColorLight;
+            LightColor = s_lightColor ??= EditorGUIUtility.isProSkin ? s_lightColorPro : s_lightColorLight;
 
             AddUpdate(() =>
             {
@@ -130,6 +137,19 @@ namespace UnityEssentials
             _initialization = null;
 
             RemoveUpdate();
+        }
+
+        private static Texture2D _backgroundTexture;
+        private static Texture2D GetBackgroundTexture(Color color)
+        {
+            if (_backgroundTexture == null)
+            {
+                _backgroundTexture = new Texture2D(1, 1);
+                _backgroundTexture.hideFlags = HideFlags.HideAndDontSave;
+            }
+            _backgroundTexture.SetPixel(0, 0, color);
+            _backgroundTexture.Apply();
+            return _backgroundTexture;
         }
     }
 }

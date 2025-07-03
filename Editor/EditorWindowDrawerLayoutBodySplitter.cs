@@ -68,7 +68,7 @@ namespace UnityEssentials
                 ? new Rect(hitboxSplitter.x, hitboxSplitter.y, hitboxSplitter.width, 1)
                 : new Rect(hitboxSplitter.x, hitboxSplitter.y, 1, hitboxSplitter.height);
 
-            EditorGUI.DrawRect(visibleSplitter, BorderColor);
+            EditorGUI.DrawRect(visibleSplitter, DarkColor);
 
             EditorGUIUtility.AddCursorRect(hitboxSplitter, isVerticalOrientation
                 ? MouseCursor.ResizeVertical

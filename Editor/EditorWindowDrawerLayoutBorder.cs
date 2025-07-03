@@ -11,8 +11,8 @@ namespace UnityEssentials
             if (!drawBorder)
                 return;
 
-            EditorGUI.DrawRect(new Rect(0, 0, Position.width, Position.height), BorderColor);
-            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), BackgroundColor);
+            EditorGUI.DrawRect(new Rect(0, 0, Position.width, Position.height), DarkColor);
+            EditorGUI.DrawRect(new Rect(1, 1, Position.width - 2, Position.height - 2), NormalColor);
             GUILayout.BeginArea(new Rect(1, 1, Position.width - 2, Position.height - 2));
         }
 
