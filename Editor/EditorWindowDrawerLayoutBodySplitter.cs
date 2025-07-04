@@ -6,10 +6,11 @@ namespace UnityEssentials
 {
     public partial class EditorWindowDrawer : EditorWindow
     {
-        public float SplitterPosition = 300f;
+        public float SplitterPosition = 300;
         public float MinSplitterSize = 50;
 
-        private const float SplitterSize = 5f;
+        private const float SplitterSize = 5;
+        private const float SplitterWidth = 1;
 
         private void DrawBodySplitView()
         {
@@ -25,7 +26,6 @@ namespace UnityEssentials
                     GUILayout.BeginHorizontal();
                     DrawPane(_paneStyle);
                     DrawSplitter(_paneStyle);
-                    GUILayout.Space(-SplitterSize);
                     DrawBody(_paneStyle);
                     GUILayout.EndHorizontal();
                     break;
@@ -65,10 +65,10 @@ namespace UnityEssentials
                     GUILayout.Width(SplitterSize));
 
             var visibleSplitter = isVerticalOrientation
-                ? new Rect(hitboxSplitter.x, hitboxSplitter.y, hitboxSplitter.width, 1)
-                : new Rect(hitboxSplitter.x, hitboxSplitter.y, 1, hitboxSplitter.height);
+                ? new Rect(hitboxSplitter.x, hitboxSplitter.y, hitboxSplitter.width, SplitterWidth)
+                : new Rect(hitboxSplitter.x, hitboxSplitter.y, SplitterWidth, hitboxSplitter.height);
 
-            EditorGUI.DrawRect(visibleSplitter, DarkColor);
+            EditorGUI.DrawRect(visibleSplitter, BorderColor);
 
             EditorGUIUtility.AddCursorRect(hitboxSplitter, isVerticalOrientation
                 ? MouseCursor.ResizeVertical
@@ -86,7 +86,7 @@ namespace UnityEssentials
                 if (isVerticalOrientation)
                 {
                     bool isToolbarHeaderActive = _headerAction != null && _headerSkin == EditorWindowStyle.Toolbar;
-                    float headerOffset = isToolbarHeaderActive ? 21 : 0;
+                    float headerOffset = isToolbarHeaderActive ? 20 + SplitterWidth : 0;
                     float mouseY = GetLocalMousePosition().y - headerOffset;
                     float minPaneHeight = MinSplitterSize;
                     float maxPaneHeight = Position.height - MinSplitterSize - SplitterSize;
@@ -103,6 +103,8 @@ namespace UnityEssentials
 
                 Repaint();
             }
+
+            GUILayout.Space(-SplitterSize + SplitterWidth);
         }
     }
 }

@@ -36,19 +36,13 @@ namespace UnityEssentials
         private static GUIStyle _darkStyle;
         public static GUIStyle DarkStyle => _darkStyle ??= new GUIStyle()
         {
-            normal = new GUIStyleState()
-            {
-                background = GetBackgroundTexture(DarkColor),
-            },
+            normal = new GUIStyleState() { background = GetBackgroundTexture(DarkColor) },
         };
 
         private static GUIStyle _lightStyle;
         public static GUIStyle LightStyle => _lightStyle ??= new GUIStyle()
         {
-            normal = new GUIStyleState()
-            {
-                background = GetBackgroundTexture(LightColor),
-            },
+            normal = new GUIStyleState() { background = GetBackgroundTexture(LightColor) },
         };
 
         private static Texture2D _backgroundTexture;

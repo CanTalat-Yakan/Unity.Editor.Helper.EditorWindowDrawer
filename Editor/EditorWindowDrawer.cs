@@ -34,8 +34,10 @@ namespace UnityEssentials
 
         public static Color NormalColor;
         public static Color HighlightColor;
-        public static Color DarkColor;
         public static Color LightColor;
+        public static Color DarkColor;
+        public static Color BlackColor;
+        public static Color BorderColor;
 
         private string _desiredTitle;
         private Rect _desiredPosition;
@@ -90,22 +92,27 @@ namespace UnityEssentials
         private static readonly Color s_defaultColorLight = new(0.78f, 0.78f, 0.78f);
         private static readonly Color s_highlightColorPro = new(0.24f, 0.37f, 0.59f);
         private static readonly Color s_highlightColorLight = new(0.245f, 0.49f, 0.905f);
-        private static readonly Color s_darkColorPro = new(0.2f, 0.2f, 0.2f);
-        private static readonly Color s_darkColorLight = new(0.745f, 0.745f, 0.745f);
         private static readonly Color s_lightColorPro = new(0.25f, 0.25f, 0.25f);
         private static readonly Color s_lightColorLight = new(0.81f, 0.81f, 0.81f);
+        private static readonly Color s_darkColorPro = new(0.2f, 0.2f, 0.2f);
+        private static readonly Color s_darkColorLight = new(0.745f, 0.745f, 0.745f);
+        private static readonly Color s_blackColorPro = new(0.08f, 0.08f, 0.08f);
+        private static readonly Color s_blackColorLight = new(0.745f, 0.745f, 0.745f);
 
         private static Color? s_defaultColor;
         private static Color? s_highlightColor;
-        private static Color? s_darkColor;
         private static Color? s_lightColor;
+        private static Color? s_darkColor;
+        private static Color? s_blackColor;
 
         protected virtual void OnEnable()
         {
             NormalColor = s_defaultColor ??= EditorGUIUtility.isProSkin ? s_defaultColorPro : s_defaultColorLight;
             HighlightColor = s_highlightColor ??= EditorGUIUtility.isProSkin ? s_highlightColorPro : s_highlightColorLight;
-            DarkColor = s_darkColor ??= EditorGUIUtility.isProSkin ? s_darkColorPro : s_darkColorLight;
             LightColor = s_lightColor ??= EditorGUIUtility.isProSkin ? s_lightColorPro : s_lightColorLight;
+            DarkColor = s_darkColor ??= EditorGUIUtility.isProSkin ? s_darkColorPro : s_darkColorLight;
+            BlackColor = s_blackColor ??= EditorGUIUtility.isProSkin ? s_blackColorPro : s_blackColorLight;
+            BorderColor = BlackColor * 0.6f;
 
             AddUpdate(() =>
             {
