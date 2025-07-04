@@ -50,6 +50,19 @@ namespace UnityEssentials
                 background = GetBackgroundTexture(LightColor),
             },
         };
+
+        private static Texture2D _backgroundTexture;
+        private static Texture2D GetBackgroundTexture(Color color)
+        {
+            if (_backgroundTexture == null)
+            {
+                _backgroundTexture = new Texture2D(1, 1);
+                _backgroundTexture.hideFlags = HideFlags.HideAndDontSave;
+            }
+            _backgroundTexture.SetPixel(0, 0, color);
+            _backgroundTexture.Apply();
+            return _backgroundTexture;
+        }
     }
 }
 #endif

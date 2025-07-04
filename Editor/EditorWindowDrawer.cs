@@ -87,13 +87,13 @@ namespace UnityEssentials
         }
 
         private static readonly Color s_defaultColorPro = new(0.22f, 0.22f, 0.22f);
-        private static readonly Color s_defaultColorLight = new(0.76f, 0.76f, 0.76f);
-        private static readonly Color s_highlightColorPro = new(0.24f, 0.37f, 0.58f);
-        private static readonly Color s_highlightColorLight = new(0.22f, 0.44f, 0.9f);
+        private static readonly Color s_defaultColorLight = new(0.78f, 0.78f, 0.78f);
+        private static readonly Color s_highlightColorPro = new(0.24f, 0.37f, 0.59f);
+        private static readonly Color s_highlightColorLight = new(0.245f, 0.49f, 0.905f);
         private static readonly Color s_darkColorPro = new(0.2f, 0.2f, 0.2f);
-        private static readonly Color s_darkColorLight = new(0.65f, 0.65f, 0.65f);
+        private static readonly Color s_darkColorLight = new(0.745f, 0.745f, 0.745f);
         private static readonly Color s_lightColorPro = new(0.25f, 0.25f, 0.25f);
-        private static readonly Color s_lightColorLight = new(0.86f, 0.86f, 0.86f);
+        private static readonly Color s_lightColorLight = new(0.81f, 0.81f, 0.81f);
 
         private static Color? s_defaultColor;
         private static Color? s_highlightColor;
@@ -137,19 +137,6 @@ namespace UnityEssentials
             _initialization = null;
 
             RemoveUpdate();
-        }
-
-        private static Texture2D _backgroundTexture;
-        private static Texture2D GetBackgroundTexture(Color color)
-        {
-            if (_backgroundTexture == null)
-            {
-                _backgroundTexture = new Texture2D(1, 1);
-                _backgroundTexture.hideFlags = HideFlags.HideAndDontSave;
-            }
-            _backgroundTexture.SetPixel(0, 0, color);
-            _backgroundTexture.Apply();
-            return _backgroundTexture;
         }
     }
 }
