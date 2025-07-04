@@ -45,13 +45,6 @@ namespace UnityEssentials
             return this;
         }
 
-        private bool _drawBorder;
-        public EditorWindowDrawer SetDrawBorder()
-        {
-            _drawBorder = true;
-            return this;
-        }
-
         private EditorApplication.CallbackFunction _editorApplicationCallback;
         public EditorWindowDrawer AddUpdate(Action updateAction)
         {
@@ -68,6 +61,13 @@ namespace UnityEssentials
                 EditorApplication.update -= _editorApplicationCallback;
                 _editorApplicationCallback = null;
             }
+        }
+
+        private bool _drawBorder;
+        public EditorWindowDrawer SetDrawBorder()
+        {
+            _drawBorder = true;
+            return this;
         }
 
         private Action _initialization;
