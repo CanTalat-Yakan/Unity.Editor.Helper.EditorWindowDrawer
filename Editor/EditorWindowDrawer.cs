@@ -44,7 +44,23 @@ namespace UnityEssentials
 
         private static readonly Vector2 s_minSize = new(256, 256);
 
-        public EditorWindowDrawer()
+        public static EditorWindowDrawer CreateInstance() =>
+            CreateInstance<EditorWindowDrawer>()
+                .Initialize();
+
+        public static EditorWindowDrawer CreateInstance(
+            string title = null,
+            Vector2? minSize = null,
+            Vector2? size = null,
+            Vector2? position = null,
+            bool centerX = true,
+            bool centerY = false)
+        {
+            return CreateInstance<EditorWindowDrawer>()
+                .Initialize(title, minSize, size, position, centerX, centerY);
+        }
+
+        private EditorWindowDrawer Initialize()
         {
             var size = s_minSize;
             var position = GetMousePosition(size);
@@ -52,9 +68,11 @@ namespace UnityEssentials
             _desiredPosition = new Rect(position.x, position.y, size.x, size.y);
 
             base.minSize = s_minSize;
+
+            return this;
         }
 
-        public EditorWindowDrawer(
+        private EditorWindowDrawer Initialize(
             string title = null,
             Vector2? minSize = null,
             Vector2? size = null,
@@ -71,6 +89,8 @@ namespace UnityEssentials
 
             base.titleContent = new GUIContent(_desiredTitle);
             base.minSize = minSize.Value;
+
+            return this;
         }
 
         private void OnGUI()
@@ -124,13 +144,14 @@ namespace UnityEssentials
             });
         }
 
-        private bool _isUnfocusable = false;
+        private bool _closeOnLostFocus = false;
         public void OnLostFocus()
         {
-            if (_isUnfocusable)
-                Close();
+            if (!_closeOnLostFocus)
+                return;
 
             RemoveUpdate();
+            Close();
         }
 
         public void OnDestroy()

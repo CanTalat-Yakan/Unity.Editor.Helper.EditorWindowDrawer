@@ -7,7 +7,7 @@ namespace UnityEssentials
 {
     public partial class EditorWindowDrawer : EditorWindow
     {
-        public EditorWindowDrawer ShowWindow()
+        public EditorWindowDrawer ShowAsWindow()
         {
             base.Show();
             base.Focus();
@@ -16,7 +16,7 @@ namespace UnityEssentials
             return this;
         }
 
-        public EditorWindowDrawer ShowUtility()
+        public EditorWindowDrawer ShowAsUtility()
         {
             base.ShowUtility();
             base.Focus();
@@ -26,11 +26,11 @@ namespace UnityEssentials
             return this;
         }
 
-        public EditorWindowDrawer ShowPopup()
+        public EditorWindowDrawer ShowAsPopup()
         {
             base.ShowPopup();
             base.Focus();
-            _isUnfocusable = true;
+            _closeOnLostFocus = true;
             _initialization?.Invoke();
             return this;
         }
@@ -40,7 +40,7 @@ namespace UnityEssentials
             size ??= s_minSize;
             base.ShowAsDropDown(GUIUtility.GUIToScreenRect(rect), size.Value);
             base.Focus();
-            _isUnfocusable = true;
+            _closeOnLostFocus = true;
             _initialization?.Invoke();
             return this;
         }
@@ -56,11 +56,11 @@ namespace UnityEssentials
 
         public void RemoveUpdate()
         {
-            if (_editorApplicationCallback != null)
-            {
-                EditorApplication.update -= _editorApplicationCallback;
-                _editorApplicationCallback = null;
-            }
+            if (_editorApplicationCallback is null)
+                return;
+
+            EditorApplication.update -= _editorApplicationCallback;
+            _editorApplicationCallback = null;
         }
 
         private bool _drawBorder;

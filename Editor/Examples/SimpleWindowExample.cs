@@ -9,11 +9,12 @@ namespace Examples.EditorWindow
     {
         [MenuItem("Tools/Examples/Simple Example Window", priority = 10000)]
         public static void ShowWindow() =>
-            new EditorWindowDrawer("Example")
+            EditorWindowDrawer
+                .CreateInstance("Example")
                 .SetHeader(Header)
                 .SetBody(Body)
                 .SetFooter(Footer)
-                .ShowWindow();
+                .ShowAsWindow();
 
         public static void Header() =>
             GUILayout.Label("Header");
