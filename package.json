@@ -1,9 +1,9 @@
 {
   "name": "com.unityessentials.editorwindowdrawer",
   "version": "1.0.0",
-  "displayName": "UnityEssentials EditorWindowDrawer",
+  "displayName": "EditorWindowDrawer",
   "description": "This is a part of the UnityEssentials Ecosystem",
-  "unity": "2022.1",
+  "unity": "6000.0",
   "unityRelease": null,
   "dependencies": {
     "com.unityessentials.core": "1.0.0",
